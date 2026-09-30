@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import {
   User as UserIcon,
   GraduationCap,
@@ -18,155 +17,36 @@ import { Card } from '../../reusables/base/Card/Card';
 import { Button } from '../../reusables/base/Button/Button';
 import { Input } from '../../reusables/base/Input/Input';
 import { ImageCropperModal } from '../../reusables/feature/Navigation/ImageCropperModal';
-import { authService } from '../../../services/AuthService/authService';
-import type { User, EducationDetails, WorkDetails, AddressDetails } from '../../../types/authTypes';
+import { useProfileSettingsVM } from './profileSettings.vm';
 
 export const ProfileSettingsScreen: React.FC = () => {
-  const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
-
-  // Form states
-  const [name, setName] = useState(currentUser?.name || '');
-  const [phoneNumber, setPhoneNumber] = useState(currentUser?.phoneNumber || '');
-  const [countryCode, setCountryCode] = useState(currentUser?.countryCode || '+1');
-
-  // Education state
-  const [education, setEducation] = useState<EducationDetails>({
-    degree: currentUser?.education?.degree || '',
-    institution: currentUser?.education?.institution || '',
-    fieldOfStudy: currentUser?.education?.fieldOfStudy || '',
-    graduationYear: currentUser?.education?.graduationYear || ''
-  });
-
-  // Work state
-  const [work, setWork] = useState<WorkDetails>({
-    jobTitle: currentUser?.work?.jobTitle || '',
-    company: currentUser?.work?.company || '',
-    industry: currentUser?.work?.industry || '',
-    yearsOfExperience: currentUser?.work?.yearsOfExperience || ''
-  });
-
-  // Address state
-  const [address, setAddress] = useState<AddressDetails>({
-    street: currentUser?.address?.street || '',
-    city: currentUser?.address?.city || '',
-    state: currentUser?.address?.state || '',
-    country: currentUser?.address?.country || '',
-    postalCode: currentUser?.address?.postalCode || ''
-  });
-
-  // Images state
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(currentUser?.avatarUrl);
-  const [coverUrl, setCoverUrl] = useState<string | undefined>(currentUser?.coverUrl);
-
-  // Cropper state
-  const [cropTarget, setCropTarget] = useState<'avatar' | 'cover' | null>(null);
-  const [rawImageForCrop, setRawImageForCrop] = useState<string | null>(null);
-
-  // Status feedback
-  const [isSaving, setIsSaving] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-
-  useEffect(() => {
-    const user = authService.getCurrentUser();
-    if (user) {
-      setCurrentUser(user);
-      setName(user.name || '');
-      setPhoneNumber(user.phoneNumber || '');
-      setCountryCode(user.countryCode || '+1');
-      setAvatarUrl(user.avatarUrl);
-      setCoverUrl(user.coverUrl);
-      if (user.education) setEducation(user.education);
-      if (user.work) setWork(user.work);
-      if (user.address) setAddress(user.address);
-    }
-  }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, target: 'avatar' | 'cover') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setRawImageForCrop(reader.result as string);
-      setCropTarget(target);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
-  const handleCropSave = async (croppedDataUrl: string) => {
-    if (cropTarget === 'avatar') {
-      setAvatarUrl(croppedDataUrl);
-      try {
-        const updated = await authService.updateUserProfileAPI({ avatarUrl: croppedDataUrl });
-        setCurrentUser(updated);
-        setToastMessage({ text: 'Profile avatar updated and saved!', type: 'success' });
-      } catch {
-        setToastMessage({ text: 'Avatar cropped locally. Click Save to persist.', type: 'success' });
-      }
-    } else if (cropTarget === 'cover') {
-      setCoverUrl(croppedDataUrl);
-      try {
-        const updated = await authService.updateUserProfileAPI({ coverUrl: croppedDataUrl });
-        setCurrentUser(updated);
-        setToastMessage({ text: 'Cover banner updated and saved!', type: 'success' });
-      } catch {
-        setToastMessage({ text: 'Cover cropped locally. Click Save to persist.', type: 'success' });
-      }
-    }
-    setCropTarget(null);
-    setRawImageForCrop(null);
-    setTimeout(() => setToastMessage(null), 3500);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setToastMessage(null);
-
-    try {
-      const payload: Partial<User> = {
-        name,
-        phoneNumber,
-        countryCode,
-        avatarUrl,
-        coverUrl,
-        education,
-        work,
-        address
-      };
-
-      // Call backend profile API and update local session
-      const updatedUser = await authService.updateUserProfileAPI(payload);
-      setCurrentUser(updatedUser);
-
-      setToastMessage({
-        text: 'Profile details saved to server successfully!',
-        type: 'success'
-      });
-    } catch (err: any) {
-      console.error('Failed to save profile:', err);
-      // Even if offline, save locally
-      authService.updateUserProfile({
-        name,
-        phoneNumber,
-        countryCode,
-        avatarUrl,
-        coverUrl,
-        education,
-        work,
-        address
-      });
-      setToastMessage({
-        text: 'Profile saved to local session. Server could not be reached.',
-        type: 'success'
-      });
-    } finally {
-      setIsSaving(false);
-      setTimeout(() => setToastMessage(null), 4000);
-    }
-  };
+  const {
+    currentUser,
+    name,
+    setName,
+    phoneNumber,
+    setPhoneNumber,
+    countryCode,
+    setCountryCode,
+    education,
+    setEducation,
+    work,
+    setWork,
+    address,
+    setAddress,
+    avatarUrl,
+    coverUrl,
+    cropTarget,
+    setCropTarget,
+    rawImageForCrop,
+    setRawImageForCrop,
+    isSaving,
+    toastMessage,
+    handleFileChange,
+    handleCropSave,
+    handleSubmit,
+    navigate
+  } = useProfileSettingsVM();
 
   return (
     <AppLayout>
@@ -233,7 +113,7 @@ export const ProfileSettingsScreen: React.FC = () => {
           {/* Visual Header / Cover & Avatar Card */}
           <Card className="p-0 overflow-hidden border border-neutral-200">
             {/* Cover Banner */}
-            <div className="relative h-44 sm:h-56 w-full bg-gradient-to-r from-orange-400 via-[#EA580C] to-amber-500 overflow-hidden group">
+            <div className="relative h-44 sm:h-56 w-full bg-neutral-900 border-b border-neutral-800 overflow-hidden group">
               {coverUrl ? (
                 <img src={coverUrl} alt="Cover Banner" className="w-full h-full object-cover" />
               ) : (
@@ -513,7 +393,7 @@ export const ProfileSettingsScreen: React.FC = () => {
           </Card>
 
           {/* Bottom Sticky Action Bar */}
-          <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-neutral-200 shadow-sm sticky bottom-4 z-20">
+          <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-neutral-200/80 shadow-sm sticky bottom-4 z-20">
             <span className="text-xs text-neutral-500 hidden sm:inline">
               Changes will be synchronized to your learning profile.
             </span>

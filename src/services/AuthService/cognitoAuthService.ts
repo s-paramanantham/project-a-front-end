@@ -1,6 +1,6 @@
 import type { IAuthService } from './authInterface';
 import { apiConfig } from '../../config/apiConfig';
-import { apiClient, ApiError } from '../../client/api.client';
+import { apiClient, ApiError } from '../../client/apiClient';
 import {
   signUpInCognito,
   confirmSignUpInCognito,
@@ -505,7 +505,7 @@ export class CognitoAuthService implements IAuthService {
         this.currentUser = syncedUser;
         try {
           localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(syncedUser));
-        } catch {}
+        } catch { }
         return syncedUser;
       }
     } catch (err) {

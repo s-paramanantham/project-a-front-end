@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
   Search,
-  Sparkles,
   CheckCircle2,
   Compass,
-  GraduationCap,
   Layers,
   X,
   AlertCircle,
@@ -45,7 +43,7 @@ export const CoursesScreen: React.FC = () => {
         {/* Toast Notification */}
         {toast && (
           <div
-            className={`flex items-center justify-between p-4 rounded-xl border shadow-sm animate-in fade-in slide-in-from-top-2 duration-200 ${
+            className={`flex items-center justify-between p-3.5 rounded-xl border shadow-xs animate-in fade-in slide-in-from-top-2 duration-200 ${
               toast.type === 'success'
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                 : 'bg-rose-50 border-rose-200 text-rose-800'
@@ -53,56 +51,63 @@ export const CoursesScreen: React.FC = () => {
           >
             <div className="flex items-center gap-3">
               {toast.type === 'success' ? (
-                <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
               ) : (
-                <AlertCircle size={18} className="text-rose-600 shrink-0" />
+                <AlertCircle size={16} className="text-rose-600 shrink-0" />
               )}
-              <span className="text-sm font-medium">{toast.message}</span>
+              <span className="text-xs sm:text-sm font-medium">{toast.message}</span>
             </div>
             <button
               onClick={() => setToast(null)}
-              className="p-1 rounded-lg hover:bg-black/5 text-neutral-500 cursor-pointer"
+              className="p-1 rounded-md hover:bg-black/5 text-neutral-500 cursor-pointer"
             >
-              <X size={15} />
+              <X size={14} />
             </button>
           </div>
         )}
 
-        {/* Hero Section Banner */}
-        <div className="bg-gradient-to-r from-orange-600 via-[#EA580C] to-amber-600 text-white rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 backdrop-blur-md px-3 py-1 rounded-full mb-3 text-orange-50">
-              <Sparkles size={13} />
-              <span>Full Curriculum • Interactive Enrollment</span>
+        {/* Developer Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200/80 pb-5">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-900">
+                Courses
+              </h1>
+              <span className="px-2 py-0.5 text-[11px] font-medium rounded-md bg-neutral-100 text-neutral-600 border border-neutral-200">
+                Curriculum
+              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight mb-2 text-white">
-              Course Catalog & Learning Paths
-            </h1>
-            <p className="text-orange-100 text-xs sm:text-sm leading-relaxed">
-              Explore hands-on technical training across SQL, HTML, CSS, JavaScript, TypeScript, Node.js, and Python.
-              Enroll with one click to personalize your curriculum.
+            <p className="text-xs sm:text-sm text-neutral-500">
+              Explore technical training tracks, syllabus modules, and hands-on developer certifications.
             </p>
           </div>
 
-          {/* Decorative Background Accents */}
-          <div className="absolute right-0 -bottom-10 opacity-10 pointer-events-none hidden md:block">
-            <GraduationCap size={240} />
-          </div>
+          {currentUser?.role === 'tutor' && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate('/courses/create')}
+              leftIcon={<PlusCircle size={14} />}
+              className="shrink-0 text-xs py-2 shadow-xs"
+            >
+              Create Course
+            </Button>
+          )}
         </div>
 
         {/* Tab Switcher & Search Bar Bar */}
-        <div className="bg-white rounded-2xl border border-neutral-200/90 p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white rounded-xl border border-neutral-200/80 p-3.5 sm:p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Tabs: My Courses vs Explore All */}
-          <div className="flex items-center gap-2 p-1 bg-neutral-100/80 rounded-xl self-start md:self-auto">
+          <div className="flex items-center gap-1.5 p-1 bg-neutral-100/80 rounded-lg self-start md:self-auto">
             <button
               onClick={() => setActiveTab('auto')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'auto' || activeTab === 'enrolled'
-                  ? 'bg-white text-[#EA580C] shadow-xs'
+                  ? 'bg-white text-neutral-900 shadow-xs border border-neutral-200/80'
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
-              <Layers size={14} />
+              <Layers size={13} className={activeTab === 'auto' || activeTab === 'enrolled' ? 'text-[#EA580C]' : ''} />
               <span>
                 {meta?.hasEnrolled ? 'My Courses' : 'All Courses'}
               </span>
@@ -115,13 +120,13 @@ export const CoursesScreen: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('all')}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'all'
-                  ? 'bg-white text-[#EA580C] shadow-xs'
+                  ? 'bg-white text-neutral-900 shadow-xs border border-neutral-200/80'
                   : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
-              <Compass size={14} />
+              <Compass size={13} className={activeTab === 'all' ? 'text-[#EA580C]' : ''} />
               <span>Explore All Courses</span>
               {meta && (
                 <span className="bg-neutral-200/80 text-neutral-700 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
@@ -131,11 +136,11 @@ export const CoursesScreen: React.FC = () => {
             </button>
           </div>
 
-          {/* Right Action: Search Box & Tutor Create Course Button */}
+          {/* Right Action: Search Box */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
               <Search
-                size={16}
+                size={14}
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"
               />
               <input
@@ -143,43 +148,31 @@ export const CoursesScreen: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by title, publisher, tech..."
-                className="w-full pl-10 pr-9 py-2 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-xs border border-neutral-200 rounded-xl outline-none focus:border-[#F97316] focus:ring-2 focus:ring-orange-500/10 transition-all text-neutral-800"
+                className="w-full pl-9 pr-8 py-1.5 bg-neutral-50 hover:bg-neutral-100/50 focus:bg-white text-xs border border-neutral-200 rounded-lg outline-none focus:border-[#EA580C] focus:ring-1 focus:ring-orange-500/20 transition-all text-neutral-800"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer"
                 >
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               )}
             </div>
-
-            {currentUser?.role === 'tutor' && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => navigate('/courses/create')}
-                leftIcon={<PlusCircle size={14} />}
-                className="shrink-0 text-xs py-2 shadow-xs"
-              >
-                Create Course
-              </Button>
-            )}
           </div>
         </div>
 
         {/* Category Pills */}
         {categories.length > 1 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat
-                    ? 'bg-[#F97316] text-white shadow-xs'
-                    : 'bg-white text-neutral-600 border border-neutral-200/90 hover:bg-neutral-50'
+                    ? 'bg-neutral-900 text-white shadow-xs'
+                    : 'bg-white text-neutral-600 border border-neutral-200/80 hover:bg-neutral-50'
                 }`}
               >
                 {cat}
@@ -190,16 +183,16 @@ export const CoursesScreen: React.FC = () => {
 
         {/* Prompt banner if student has enrolled courses and is viewing My Courses */}
         {meta?.hasEnrolled && activeTab !== 'all' && (
-          <div className="p-4 bg-orange-50/70 border border-orange-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2 text-[#EA580C]">
-              <CheckCircle2 size={16} className="shrink-0" />
+          <div className="p-3.5 bg-orange-50/60 border border-orange-200/70 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-neutral-700">
+              <CheckCircle2 size={15} className="text-[#EA580C] shrink-0" />
               <span>
-                You are enrolled in <strong>{meta.enrolledCount} course{meta.enrolledCount > 1 ? 's' : ''}</strong>. Click below to browse the rest of our catalog!
+                You are enrolled in <strong className="text-neutral-900">{meta.enrolledCount} course{meta.enrolledCount > 1 ? 's' : ''}</strong>. Browse catalog for additional tracks.
               </span>
             </div>
             <button
               onClick={() => setActiveTab('all')}
-              className="text-[#EA580C] hover:text-[#C2410C] font-bold underline cursor-pointer text-left sm:text-right"
+              className="text-[#EA580C] hover:text-[#C2410C] font-semibold cursor-pointer text-left sm:text-right"
             >
               Browse all {meta.totalCourses} courses →
             </button>
@@ -208,13 +201,13 @@ export const CoursesScreen: React.FC = () => {
 
         {/* Courses Cards Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[1, 2, 3, 4, 5, 6].map((idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-2xl border border-neutral-200 p-4 space-y-4 animate-pulse"
+                className="bg-white rounded-xl border border-neutral-200/80 p-4 space-y-4 animate-pulse"
               >
-                <div className="aspect-video w-full bg-neutral-200 rounded-xl" />
+                <div className="aspect-video w-full bg-neutral-200 rounded-lg" />
                 <div className="h-4 bg-neutral-200 rounded w-1/3" />
                 <div className="h-5 bg-neutral-200 rounded w-4/5" />
                 <div className="h-12 bg-neutral-100 rounded w-full" />
@@ -223,7 +216,7 @@ export const CoursesScreen: React.FC = () => {
             ))}
           </div>
         ) : courses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {courses.map((course) => (
               <CourseCard
                 key={course.id}
@@ -236,17 +229,17 @@ export const CoursesScreen: React.FC = () => {
           </div>
         ) : (
           /* Empty State */
-          <div className="bg-white rounded-3xl border border-dashed border-neutral-300 p-12 text-center max-w-lg mx-auto my-8">
-            <div className="w-14 h-14 rounded-2xl bg-orange-100 text-[#EA580C] flex items-center justify-center mx-auto mb-4">
-              <BookOpen size={28} />
+          <div className="bg-white rounded-xl border border-dashed border-neutral-300 p-10 text-center max-w-lg mx-auto my-8">
+            <div className="w-11 h-11 rounded-lg bg-neutral-100 text-neutral-600 flex items-center justify-center mx-auto mb-3 border border-neutral-200">
+              <BookOpen size={20} />
             </div>
-            <h3 className="font-heading font-bold text-lg text-neutral-900 mb-1">
+            <h3 className="font-bold text-sm text-neutral-900 mb-1">
               {searchQuery ? 'No courses found' : 'No courses in this view'}
             </h3>
-            <p className="text-xs text-neutral-500 leading-relaxed mb-6">
+            <p className="text-xs text-neutral-500 leading-relaxed mb-5">
               {searchQuery
                 ? `No courses matched "${searchQuery}". Try searching for SQL, HTML, CSS, JavaScript, TypeScript, Node, or Python.`
-                : 'Switch to "Explore All Courses" to view all available sample courses and enroll.'}
+                : 'Switch to "Explore All Courses" to view all available courses.'}
             </p>
             {searchQuery ? (
               <Button variant="secondary" size="sm" onClick={() => setSearchQuery('')}>

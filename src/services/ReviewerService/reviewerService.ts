@@ -1,4 +1,4 @@
-import { apiClient } from '../../client/api.client';
+import { apiClient } from '../../client/apiClient';
 import { authService } from '../AuthService/authService';
 import type { TutorReviewer, ReviewSubmission } from '../../types/reviewerTypes';
 

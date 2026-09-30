@@ -7,7 +7,6 @@ import {
   LogOut,
   ChevronRight,
   ChevronLeft,
-  Sparkles,
   PlusCircle,
   UserCheck,
   Users,
@@ -107,34 +106,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 bg-white border-r border-neutral-200/90 flex flex-col justify-between transition-all duration-300 ease-in-out lg:translate-x-0 ${
-          isOpenMobile ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
-        } ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}`}
+        className={`fixed top-0 bottom-0 left-0 z-50 bg-white border-r border-neutral-200/80 flex flex-col justify-between transition-all duration-300 ease-in-out lg:translate-x-0 ${
+          isOpenMobile ? 'translate-x-0 w-60' : '-translate-x-full lg:translate-x-0'
+        } ${isCollapsed ? 'lg:w-16' : 'lg:w-60'}`}
       >
         {/* Top: Brand Header */}
         <div>
           <div
-            className={`h-16 border-b border-neutral-100 flex items-center transition-all duration-300 ${
-              isCollapsed ? 'px-3 justify-center' : 'px-5 justify-between'
+            className={`h-14 border-b border-neutral-100 flex items-center transition-all duration-300 ${
+              isCollapsed ? 'px-2 justify-center' : 'px-4 justify-between'
             }`}
           >
             <NavLink
               to="/dashboard"
-              className="flex items-center gap-3 group focus:outline-none overflow-hidden"
+              className="flex items-center gap-2.5 group focus:outline-none overflow-hidden"
               onClick={onCloseMobile}
-              title="Project A Learning Hub"
+              title="Project A"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EA580C] to-[#F97316] text-white flex items-center justify-center shadow-sm shadow-orange-500/20 group-hover:scale-105 transition-transform shrink-0">
-                <BookOpen size={20} strokeWidth={2.4} />
+              <div className="w-7 h-7 rounded-lg bg-neutral-900 text-white flex items-center justify-center shadow-xs shrink-0">
+                <BookOpen size={14} strokeWidth={2.5} />
               </div>
 
               {!isCollapsed && (
-                <div className="animate-in fade-in duration-200 truncate">
-                  <span className="font-heading font-extrabold text-base tracking-tight text-neutral-900 block truncate">
+                <div className="animate-in fade-in duration-150 truncate">
+                  <span className="font-bold text-sm tracking-tight text-neutral-900 block truncate leading-tight">
                     Project A
                   </span>
-                  <span className="block text-[10px] font-semibold text-[#EA580C] tracking-wide uppercase">
-                    Learning Hub
+                  <span className="block text-[10px] font-medium text-neutral-400 tracking-normal">
+                    Workspace
                   </span>
                 </div>
               )}
@@ -144,11 +143,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {onToggleCollapse && !isCollapsed && (
               <button
                 onClick={onToggleCollapse}
-                className="hidden lg:flex p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
+                className="hidden lg:flex p-1 rounded-md text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
                 title="Collapse Sidebar"
                 aria-label="Collapse Sidebar"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={16} />
               </button>
             )}
 
@@ -156,33 +155,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {onCloseMobile && (
               <button
                 onClick={onCloseMobile}
-                className="lg:hidden p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100"
+                className="lg:hidden p-1 rounded-md text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100"
                 aria-label="Close navigation"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             )}
           </div>
 
           {/* If Collapsed, provide Expand toggle at the top of the nav */}
           {isCollapsed && onToggleCollapse && (
-            <div className="hidden lg:flex justify-center py-2 border-b border-neutral-100/80">
+            <div className="hidden lg:flex justify-center py-2 border-b border-neutral-100">
               <button
                 onClick={onToggleCollapse}
-                className="p-2 rounded-xl text-neutral-500 hover:text-[#EA580C] hover:bg-orange-50 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
                 title="Expand Sidebar"
                 aria-label="Expand Sidebar"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={16} />
               </button>
             </div>
           )}
 
           {/* Navigation Links */}
-          <nav className="p-3 space-y-1.5" aria-label="Main Navigation">
+          <nav className="p-2.5 space-y-0.5" aria-label="Main Navigation">
             {!isCollapsed && (
-              <div className="px-3 pt-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                Overview
+              <div className="px-2.5 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
+                Navigation
               </div>
             )}
 
@@ -196,17 +195,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   to={item.path}
                   onClick={onCloseMobile}
                   title={item.label}
-                  className={`flex items-center rounded-xl text-sm font-medium transition-all group ${
-                    isCollapsed ? 'justify-center p-3' : 'justify-between px-3.5 py-2.5'
+                  className={`flex items-center rounded-lg text-xs font-medium transition-all group ${
+                    isCollapsed ? 'justify-center p-2.5' : 'justify-between px-2.5 py-2'
                   } ${
                     isActive
-                      ? 'bg-orange-50 text-[#EA580C] font-semibold border border-orange-200/70 shadow-xs'
-                      : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/70'
+                      ? 'bg-neutral-100 text-neutral-900 font-semibold'
+                      : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
                   }`}
                 >
-                  <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                  <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2.5'}`}>
                     <Icon
-                      size={20}
+                      size={16}
                       className={isActive ? 'text-[#EA580C]' : 'text-neutral-400 group-hover:text-neutral-600'}
                     />
                     {!isCollapsed && <span>{item.label}</span>}
@@ -214,10 +213,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   {!isCollapsed && item.badge && (
                     <span
-                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                      className={`text-[10px] font-semibold px-1.5 py-0.2 rounded ${
                         isActive
-                          ? 'bg-[#F97316] text-white'
-                          : 'bg-neutral-100 text-neutral-600 border border-neutral-200'
+                          ? 'bg-[#EA580C] text-white'
+                          : 'bg-neutral-100 text-neutral-500 border border-neutral-200/80'
                       }`}
                     >
                       {item.badge}
@@ -229,71 +228,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </nav>
         </div>
 
-        {/* Learning Pro Tip Card in Sidebar (Only when expanded) */}
-        {!isCollapsed && (
-          <div className="px-3.5 py-2 animate-in fade-in duration-200">
-            <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 border border-orange-200/60 rounded-xl">
-              <div className="flex items-center gap-1.5 text-[#EA580C] font-bold text-xs mb-1">
-                <Sparkles size={13} />
-                <span>Skill Sprint</span>
-              </div>
-              <p className="text-[11px] text-neutral-600 leading-relaxed mb-2">
-                Browse newly seeded courses including SQL, TypeScript, and Python!
-              </p>
-              <NavLink
-                to="/courses"
-                onClick={onCloseMobile}
-                className="text-[11px] font-semibold text-[#EA580C] hover:text-[#C2410C] inline-flex items-center gap-1"
-              >
-                <span>Explore catalog</span>
-                <ChevronRight size={12} />
-              </NavLink>
-            </div>
-          </div>
-        )}
-
         {/* Bottom Section: Profile & Logout */}
-        <div className="p-3 border-t border-neutral-100 bg-neutral-50/50 space-y-1.5">
+        <div className="p-2.5 border-t border-neutral-100 space-y-1">
           {/* Profile Trigger Button */}
           <button
             onClick={() => {
               if (onCloseMobile) onCloseMobile();
               onOpenProfile();
             }}
-            className={`w-full flex items-center rounded-xl hover:bg-white hover:shadow-xs border border-transparent hover:border-neutral-200 transition-all cursor-pointer group ${
-              isCollapsed ? 'justify-center p-2' : 'justify-between p-2.5 text-left'
+            className={`w-full flex items-center rounded-lg hover:bg-neutral-50 transition-colors cursor-pointer group ${
+              isCollapsed ? 'justify-center p-2' : 'justify-between p-2 text-left'
             }`}
             title="View Profile"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-lg bg-orange-100 text-[#EA580C] font-bold text-sm flex items-center justify-center shrink-0">
-                {user?.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-md bg-neutral-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                {user?.name ? user.name.charAt(0).toUpperCase() : <User size={14} />}
               </div>
               {!isCollapsed && (
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-neutral-900 truncate">
+                  <p className="text-xs font-semibold text-neutral-900 truncate leading-tight">
                     {user?.name || 'User Profile'}
                   </p>
-                  <p className="text-[11px] text-neutral-500 truncate capitalize">
-                    {user?.role || 'Student'} • View details
+                  <p className="text-[10px] text-neutral-400 truncate capitalize">
+                    {user?.role || 'Student'}
                   </p>
                 </div>
               )}
             </div>
             {!isCollapsed && (
-              <ChevronRight size={14} className="text-neutral-400 group-hover:text-neutral-700 shrink-0" />
+              <ChevronRight size={13} className="text-neutral-300 group-hover:text-neutral-600 shrink-0" />
             )}
           </button>
 
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer ${
-              isCollapsed ? 'justify-center p-2.5' : 'gap-2.5 px-3 py-2'
+            className={`w-full flex items-center text-xs font-medium text-neutral-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer ${
+              isCollapsed ? 'justify-center p-2' : 'gap-2 px-2 py-1.5'
             }`}
             title="Sign Out"
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
             {!isCollapsed && <span>Sign Out</span>}
           </button>
         </div>

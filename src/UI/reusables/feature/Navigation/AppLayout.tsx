@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, BookOpen, GraduationCap, Award, Sparkles } from 'lucide-react';
+import { Menu, BookOpen } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { ProfileModal } from './ProfileModal';
 import { authService } from '../../../../services/AuthService/authService';
@@ -9,16 +9,6 @@ import type { User } from '../../../../types/authTypes';
 interface AppLayoutProps {
   children: React.ReactNode;
 }
-
-const MOTIVATIONAL_QUOTES = [
-  "Small daily improvements over time lead to stunning results.",
-  "The secret of getting ahead is getting started.",
-  "Every expert was once a beginner. Keep coding!",
-  "Consistency is the key to mastering any programming language.",
-  "Code every day, stay curious, and keep building.",
-  "The beautiful thing about learning is that no one can take it away from you.",
-  "Dream big. Start small. Learn continuously."
-];
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -32,15 +22,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   });
   const [enrolledCount, setEnrolledCount] = useState<number>(0);
   const [currentUser, setCurrentUser] = useState<User | null>(() => authService.getCurrentUser());
-  const [quoteIndex, setQuoteIndex] = useState(0);
-
-  // Rotating motivational quotes with 5s delay
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % MOTIVATIONAL_QUOTES.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   const toggleCollapse = () => {
     setIsCollapsed((prev) => {
@@ -125,30 +106,35 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </button>
         </header>
 
-        {/* Desktop Top Sub-Bar with Student Name in Linear Gradient & Rotating Motivational Quotes */}
-        <header className="hidden lg:flex sticky top-0 z-20 bg-white/90 backdrop-blur-xs border-b border-neutral-200/80 px-8 h-16 items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="text-sm font-extrabold bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 bg-clip-text text-transparent shrink-0">
-              {currentUser?.name || 'Welcome Learner'}
+        {/* Desktop Top Bar: Clean Developer-Grade Navigation */}
+        <header className="hidden lg:flex sticky top-0 z-20 bg-white/95 backdrop-blur-xs border-b border-neutral-200/80 px-8 h-14 items-center justify-between">
+          <div className="flex items-center gap-2.5 text-xs">
+            <span className="font-semibold text-neutral-500">Project A</span>
+            <span className="text-neutral-300">/</span>
+            <span className="font-semibold text-neutral-800">Workspace</span>
+            <span className="inline-flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>Active</span>
             </span>
-            <span className="text-neutral-300 hidden md:inline shrink-0">•</span>
-            <div className="flex items-center gap-2 text-xs text-neutral-500 italic min-w-0 transition-all duration-700 ease-in-out">
-              <Sparkles size={13} className="text-amber-500 shrink-0 animate-pulse" />
-              <span className="truncate">"{MOTIVATIONAL_QUOTES[quoteIndex]}"</span>
-            </div>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setIsProfileOpen(true)}
-              className="flex items-center gap-2.5 text-xs py-1.5 px-3 rounded-full bg-neutral-50 hover:bg-orange-50 border border-neutral-200 hover:border-orange-200 transition-colors cursor-pointer"
+              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border border-neutral-200/80 hover:border-neutral-300 hover:bg-neutral-50 transition-colors cursor-pointer text-xs font-medium text-neutral-700"
               title="Open Profile Settings"
             >
-              <span className="inline-flex items-center gap-1 font-semibold text-[#EA580C]">
-                {currentUser?.role === 'tutor' ? <Award size={13} /> : <GraduationCap size={13} />}
-                <span className="capitalize">{currentUser?.role || 'Student'}</span>
+              <div className="w-6 h-6 rounded-md bg-neutral-900 text-white font-bold flex items-center justify-center text-[11px] shrink-0">
+                {currentUser?.avatarUrl ? (
+                  <img src={currentUser.avatarUrl} alt="" className="w-full h-full object-cover rounded-md" />
+                ) : (
+                  currentUser?.name?.charAt(0).toUpperCase() || 'U'
+                )}
+              </div>
+              <span className="font-semibold text-neutral-800">{currentUser?.name || 'Profile'}</span>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 border border-neutral-200/60 capitalize">
+                {currentUser?.role || 'Student'}
               </span>
-              <span className="text-neutral-800 font-bold">{currentUser?.name || 'Profile'}</span>
             </button>
           </div>
         </header>

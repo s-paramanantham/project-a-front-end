@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React from 'react';
 import {
   BookOpen,
   Layers,
@@ -13,338 +12,58 @@ import {
   HelpCircle,
   Eye,
   Camera,
-  X
+  X,
+  Copy
 } from 'lucide-react';
 import { AppLayout } from '../../reusables/feature/Navigation/AppLayout';
 import { Card } from '../../reusables/base/Card/Card';
 import { Button } from '../../reusables/base/Button/Button';
 import { Input } from '../../reusables/base/Input/Input';
 import { ImageCropperModal } from '../../reusables/feature/Navigation/ImageCropperModal';
-import { courseService } from '../../../services/CourseService/courseService';
-import type { Course, Topic, QuizQuestion } from '../../../types/courseTypes';
-
-const CATEGORIES = [
-  'Web Development',
-  'Frontend Engineering',
-  'Backend Engineering',
-  'Cloud & DevOps',
-  'Data Science & AI',
-  'Programming Languages',
-  'Database Management',
-  'Cybersecurity'
-];
-
-const CODE_LANGUAGES = [
-  'javascript',
-  'typescript',
-  'html',
-  'css',
-  'python',
-  'sql',
-  'bash',
-  'json'
-];
-
-interface TopicModalForm {
-  id?: string;
-  title: string;
-  description: string;
-  explanation: string;
-  code_example: string;
-  code_language: string;
-  image_url: string;
-  key_takeaways: string[];
-  questions: Array<{
-    id?: string;
-    question_text: string;
-    question_options: [string, string, string, string];
-    correct_option_index: number;
-    question_explanation: string;
-  }>;
-}
+import { CATEGORIES, CODE_LANGUAGES, useManageCourseVM } from './manageCourse.vm';
 
 export const ManageCourseScreen: React.FC = () => {
-  const { courseId } = useParams<{ courseId: string }>();
-  const navigate = useNavigate();
+  const {
+    navigate,
+    course,
+    topics,
+    isLoading,
+    toast,
+    setToast,
+    title,
+    setTitle,
+    publisher,
+    setPublisher,
+    description,
+    setDescription,
+    image,
+    setImage,
+    level,
+    setLevel,
+    duration,
+    setDuration,
+    category,
+    setCategory,
+    isSavingCourse,
+    isCropperOpen,
+    setIsCropperOpen,
+    rawImageForCrop,
+    isLessonModalOpen,
+    setIsLessonModalOpen,
+    editingTopicId,
+    lessonForm,
+    setLessonForm,
+    isSavingLesson,
+    deletingTopicId,
+    handleFileChange,
+    handleSaveCourseInfo,
+    handleOpenAddLesson,
+    handleOpenEditLesson,
+    handleDuplicateQuestionInModal,
+    handleDeleteLesson,
+    handleSaveLesson
+  } = useManageCourseVM();
 
-  const [course, setCourse] = useState<Course | null>(null);
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  // Course edit fields
-  const [title, setTitle] = useState('');
-  const [publisher, setPublisher] = useState('');
-  const [description, setDescription] = useState('');
-  const [image, setImage] = useState('');
-  const [level, setLevel] = useState('Beginner');
-  const [duration, setDuration] = useState('10 Hours');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [isSavingCourse, setIsSavingCourse] = useState(false);
-
-  // Image Cropper modal state
-  const [isCropperOpen, setIsCropperOpen] = useState(false);
-  const [rawImageForCrop, setRawImageForCrop] = useState<string | null>(null);
-
-  // Lesson Edit / Add Modal state
-  const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
-  const [editingTopicId, setEditingTopicId] = useState<string | null>(null);
-  const [lessonForm, setLessonForm] = useState<TopicModalForm>({
-    title: '',
-    description: '',
-    explanation: '',
-    code_example: '',
-    code_language: 'javascript',
-    image_url: '',
-    key_takeaways: [''],
-    questions: [
-      {
-        question_text: '',
-        question_options: ['', '', '', ''],
-        correct_option_index: 0,
-        question_explanation: ''
-      }
-    ]
-  });
-  const [isSavingLesson, setIsSavingLesson] = useState(false);
-  const [deletingTopicId, setDeletingTopicId] = useState<string | null>(null);
-
-  const loadCourseData = useCallback(async () => {
-    if (!courseId) return;
-    setIsLoading(true);
-    try {
-      const data = await courseService.getCourseTopics(courseId);
-      setCourse(data.course);
-      setTopics(data.topics);
-
-      // Populate course form
-      setTitle(data.course.title || '');
-      setPublisher(data.course.publisher || '');
-      setDescription(data.course.description || '');
-      setImage(data.course.image || '');
-      setLevel(data.course.level || 'Beginner');
-      setDuration(data.course.duration || '10 Hours');
-      setCategory(data.course.category || CATEGORIES[0]);
-    } catch (err: any) {
-      setToast({ message: err.message || 'Failed to load course details', type: 'error' });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [courseId]);
-
-  useEffect(() => {
-    loadCourseData();
-  }, [loadCourseData]);
-
-  // Handle Cover file selection for crop
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setRawImageForCrop(reader.result as string);
-      setIsCropperOpen(true);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
-  const handleSaveCourseInfo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!courseId) return;
-
-    setIsSavingCourse(true);
-    try {
-      const updated = await courseService.updateCourse(courseId, {
-        title: title.trim(),
-        publisher: publisher.trim(),
-        description: description.trim(),
-        image: image.trim(),
-        level,
-        duration,
-        category
-      });
-      setCourse(updated);
-      setToast({ message: 'Course metadata updated successfully!', type: 'success' });
-    } catch (err: any) {
-      setToast({ message: err.message || 'Failed to update course', type: 'error' });
-    } finally {
-      setIsSavingCourse(false);
-      setTimeout(() => setToast(null), 4000);
-    }
-  };
-
-  const handleOpenAddLesson = () => {
-    setEditingTopicId(null);
-    setLessonForm({
-      title: '',
-      description: '',
-      explanation: '',
-      code_example: '',
-      code_language: 'javascript',
-      image_url: image || '',
-      key_takeaways: [''],
-      questions: [
-        {
-          question_text: '',
-          question_options: ['', '', '', ''],
-          correct_option_index: 0,
-          question_explanation: ''
-        }
-      ]
-    });
-    setIsLessonModalOpen(true);
-  };
-
-  const handleOpenEditLesson = (topic: Topic) => {
-    setEditingTopicId(topic.id);
-
-    const questionsList =
-      Array.isArray(topic.questions) && topic.questions.length > 0
-        ? topic.questions.map((q: QuizQuestion) => ({
-            id: q.id,
-            question_text: q.question_text || '',
-            question_options: (q.question_options && q.question_options.length === 4
-              ? q.question_options
-              : [
-                  q.question_options?.[0] || '',
-                  q.question_options?.[1] || '',
-                  q.question_options?.[2] || '',
-                  q.question_options?.[3] || ''
-                ]) as [string, string, string, string],
-            correct_option_index: q.correct_option_index ?? 0,
-            question_explanation: q.question_explanation || ''
-          }))
-        : [
-            {
-              id: 'q-1',
-              question_text: topic.question_text || '',
-              question_options: (topic.question_options && topic.question_options.length === 4
-                ? topic.question_options
-                : [
-                    topic.question_options?.[0] || '',
-                    topic.question_options?.[1] || '',
-                    topic.question_options?.[2] || '',
-                    topic.question_options?.[3] || ''
-                  ]) as [string, string, string, string],
-              correct_option_index: topic.correct_option_index ?? 0,
-              question_explanation: topic.question_explanation || ''
-            }
-          ];
-
-    setLessonForm({
-      id: topic.id,
-      title: topic.title,
-      description: topic.description,
-      explanation: topic.explanation,
-      code_example: topic.code_example || '',
-      code_language: topic.code_language || 'javascript',
-      image_url: topic.image_url || '',
-      key_takeaways: topic.key_takeaways && topic.key_takeaways.length > 0 ? topic.key_takeaways : [''],
-      questions: questionsList
-    });
-    setIsLessonModalOpen(true);
-  };
-
-  const handleDeleteLesson = async (topicId: string) => {
-    if (!courseId) return;
-    if (!window.confirm('Are you sure you want to delete this lesson from the curriculum?')) return;
-
-    setDeletingTopicId(topicId);
-    try {
-      await courseService.deleteTopic(courseId, topicId);
-      setToast({ message: 'Lesson deleted successfully', type: 'success' });
-      await loadCourseData();
-    } catch (err: any) {
-      setToast({ message: err.message || 'Failed to delete lesson', type: 'error' });
-    } finally {
-      setDeletingTopicId(null);
-      setTimeout(() => setToast(null), 4000);
-    }
-  };
-
-  const handleSaveLesson = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!courseId) return;
-
-    // Strict validation
-    if (!lessonForm.title.trim()) {
-      setToast({ message: 'Lesson title is required.', type: 'error' });
-      return;
-    }
-    if (!lessonForm.description.trim()) {
-      setToast({ message: 'Lesson description is required.', type: 'error' });
-      return;
-    }
-    if (!lessonForm.explanation.trim()) {
-      setToast({ message: 'Full lesson explanation is required.', type: 'error' });
-      return;
-    }
-    if (!lessonForm.code_example.trim()) {
-      setToast({ message: 'Code example is required.', type: 'error' });
-      return;
-    }
-
-    for (let qIdx = 0; qIdx < lessonForm.questions.length; qIdx++) {
-      const q = lessonForm.questions[qIdx];
-      const qNum = qIdx + 1;
-      if (!q.question_text.trim()) {
-        setToast({ message: `Question #${qNum} text is required.`, type: 'error' });
-        return;
-      }
-      for (let o = 0; o < 4; o++) {
-        if (!q.question_options[o]?.trim()) {
-          setToast({ message: `Question #${qNum}, Option ${String.fromCharCode(65 + o)} is empty.`, type: 'error' });
-          return;
-        }
-      }
-      if (!q.question_explanation.trim()) {
-        setToast({ message: `Question #${qNum} explanation is required.`, type: 'error' });
-        return;
-      }
-    }
-
-    setIsSavingLesson(true);
-    try {
-      const payload = {
-        title: lessonForm.title.trim(),
-        description: lessonForm.description.trim(),
-        explanation: lessonForm.explanation.trim(),
-        code_example: lessonForm.code_example.trim(),
-        code_language: lessonForm.code_language.trim(),
-        image_url: lessonForm.image_url.trim() || null,
-        key_takeaways: lessonForm.key_takeaways.map((k) => k.trim()).filter(Boolean),
-        question_text: lessonForm.questions[0].question_text.trim(),
-        question_options: lessonForm.questions[0].question_options.map((o) => o.trim()),
-        correct_option_index: lessonForm.questions[0].correct_option_index,
-        question_explanation: lessonForm.questions[0].question_explanation.trim(),
-        questions: lessonForm.questions.map((q, idx) => ({
-          id: q.id || `q-${idx + 1}`,
-          question_text: q.question_text.trim(),
-          question_options: q.question_options.map((o) => o.trim()),
-          correct_option_index: q.correct_option_index,
-          question_explanation: q.question_explanation.trim()
-        }))
-      };
-
-      if (editingTopicId) {
-        await courseService.updateTopic(courseId, editingTopicId, payload);
-        setToast({ message: 'Lesson updated successfully!', type: 'success' });
-      } else {
-        await courseService.addTopic(courseId, payload);
-        setToast({ message: 'New lesson added to course successfully!', type: 'success' });
-      }
-
-      setIsLessonModalOpen(false);
-      await loadCourseData();
-    } catch (err: any) {
-      setToast({ message: err.message || 'Failed to save lesson', type: 'error' });
-    } finally {
-      setIsSavingLesson(false);
-      setTimeout(() => setToast(null), 4000);
-    }
-  };
 
   return (
     <AppLayout>
@@ -549,11 +268,11 @@ export const ManageCourseScreen: React.FC = () => {
               </div>
 
               {topics.length === 0 ? (
-                <div className="bg-white rounded-3xl border border-neutral-200 p-12 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-orange-100 text-[#EA580C] flex items-center justify-center mx-auto">
-                    <BookOpen size={24} />
+                <div className="bg-white rounded-xl border border-dashed border-neutral-300 p-10 text-center space-y-3">
+                  <div className="w-10 h-10 rounded-lg bg-neutral-100 text-neutral-600 border border-neutral-200 flex items-center justify-center mx-auto">
+                    <BookOpen size={20} />
                   </div>
-                  <h3 className="text-base font-bold text-neutral-900">No Lessons in this Course Yet</h3>
+                  <h3 className="text-sm font-bold text-neutral-900">No Lessons in this Course Yet</h3>
                   <p className="text-xs text-neutral-500">
                     Add lessons with comprehensive explanations and multi-question quizzes.
                   </p>
@@ -570,10 +289,10 @@ export const ManageCourseScreen: React.FC = () => {
                     return (
                       <div
                         key={t.id}
-                        className="bg-white rounded-2xl border border-neutral-200 p-4 sm:p-5 shadow-2xs hover:border-neutral-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                        className="bg-white rounded-xl border border-neutral-200/80 p-4 sm:p-5 shadow-xs hover:border-neutral-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                       >
                         <div className="flex items-start gap-3 min-w-0">
-                          <span className="w-7 h-7 rounded-xl bg-orange-100 text-[#EA580C] font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
+                          <span className="w-6 h-6 rounded-md bg-neutral-100 text-neutral-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 border border-neutral-200">
                             {idx + 1}
                           </span>
                           <div className="min-w-0">
@@ -584,7 +303,7 @@ export const ManageCourseScreen: React.FC = () => {
                                 {t.code_language || 'Code'}
                               </span>
                               <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                {qCount} Quiz Question{qCount > 1 ? 's' : ''}
+                                {qCount} {qCount === 1 ? 'Quiz' : 'Quizzes'}
                               </span>
                             </div>
                           </div>
@@ -621,11 +340,11 @@ export const ManageCourseScreen: React.FC = () => {
         {/* Modal: Add / Edit Lesson with Multi-Questions */}
         {isLessonModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-xs animate-in fade-in overflow-y-auto">
-            <div className="bg-white rounded-3xl border border-neutral-200 max-w-3xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative my-8 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-xl border border-neutral-200 max-w-3xl w-full p-6 sm:p-8 space-y-6 shadow-xl relative my-8 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#EA580C] flex items-center justify-center font-bold">
-                    <Layers size={18} />
+                  <div className="w-9 h-9 rounded-lg bg-orange-50 text-[#EA580C] border border-orange-200/60 flex items-center justify-center font-bold">
+                    <Layers size={16} />
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-neutral-900">
@@ -750,14 +469,19 @@ export const ManageCourseScreen: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Interactive Multi-Questions Section */}
+                {/* Interactive Multi-Quiz Section for Lesson */}
                 <div className="pt-4 border-t border-neutral-200 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <HelpCircle size={16} className="text-[#EA580C]" />
-                      <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
-                        Interactive Comprehension Questions ({lessonForm.questions.length})
-                      </h4>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <HelpCircle size={16} className="text-[#EA580C]" />
+                        <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
+                          Lesson Quizzes ({lessonForm.questions.length})
+                        </h4>
+                      </div>
+                      <p className="text-[11px] text-neutral-500 mt-0.5">
+                        Tutors can create multiple quizzes for this lesson to evaluate student comprehension.
+                      </p>
                     </div>
 
                     <button
@@ -776,10 +500,10 @@ export const ManageCourseScreen: React.FC = () => {
                           ]
                         })
                       }
-                      className="text-xs font-bold text-[#EA580C] hover:underline flex items-center gap-1 cursor-pointer"
+                      className="self-start sm:self-auto px-2.5 py-1 text-xs font-bold text-[#EA580C] bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Plus size={13} />
-                      <span>Add Another Question</span>
+                      <span>Add Another Quiz</span>
                     </button>
                   </div>
 
@@ -787,28 +511,46 @@ export const ManageCourseScreen: React.FC = () => {
                     {lessonForm.questions.map((q, qIdx) => (
                       <div
                         key={qIdx}
-                        className="bg-neutral-50 rounded-2xl border border-neutral-200 p-4 sm:p-5 space-y-3"
+                        className="bg-neutral-50 rounded-xl border border-neutral-200 p-4 sm:p-5 space-y-3"
                       >
                         <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
-                          <span className="text-xs font-bold text-neutral-800">
-                            Question #{qIdx + 1}
+                          <span className="text-xs font-bold text-neutral-800 flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-full bg-[#EA580C] text-white text-[10px] font-bold">
+                              Quiz #{qIdx + 1}
+                            </span>
+                            <span className="text-neutral-500 text-[11px]">Assessment Question</span>
                           </span>
-                          {lessonForm.questions.length > 1 && (
+
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => {
-                                const updated = lessonForm.questions.filter((_, idx) => idx !== qIdx);
-                                setLessonForm({ ...lessonForm, questions: updated });
-                              }}
-                              className="text-neutral-400 hover:text-rose-600 text-xs flex items-center gap-1"
+                              onClick={() => handleDuplicateQuestionInModal(qIdx)}
+                              className="text-neutral-500 hover:text-neutral-800 p-1 flex items-center gap-1 text-[11px] font-semibold cursor-pointer"
+                              title="Duplicate Quiz"
                             >
-                              <Trash2 size={13} /> Remove
+                              <Copy size={12} />
+                              <span className="hidden sm:inline">Duplicate</span>
                             </button>
-                          )}
+
+                            {lessonForm.questions.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = lessonForm.questions.filter((_, idx) => idx !== qIdx);
+                                  setLessonForm({ ...lessonForm, questions: updated });
+                                }}
+                                className="text-neutral-400 hover:text-rose-600 text-xs flex items-center gap-1 cursor-pointer"
+                                title="Remove Quiz"
+                              >
+                                <Trash2 size={12} />
+                                <span className="hidden sm:inline">Remove</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         <Input
-                          label="Question Text *"
+                          label="Quiz Question *"
                           placeholder="e.g. Which keyword prevents reassignment of a variable?"
                           value={q.question_text}
                           onChange={(e) => {

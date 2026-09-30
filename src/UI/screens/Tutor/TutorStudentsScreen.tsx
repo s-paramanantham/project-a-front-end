@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Users,
   GraduationCap,
@@ -18,105 +18,33 @@ import {
 } from 'lucide-react';
 import { AppLayout } from '../../reusables/feature/Navigation/AppLayout';
 import { Button } from '../../reusables/base/Button/Button';
-import { tutorStudentService } from '../../../services/TutorService/tutorStudentService';
-import { reviewerService } from '../../../services/ReviewerService/reviewerService';
-import { todoService } from '../../../services/TodoService/todoService';
-import type { AssignedStudent, StudentProgressDetails } from '../../../types/reviewerTypes';
-import type { TodoDashboardSummary } from '../../../types/todoTypes';
+import { useTutorStudentsVM } from './tutorStudents.vm';
 
 export const TutorStudentsScreen: React.FC = () => {
-  const [students, setStudents] = useState<AssignedStudent[]>([]);
-  const [filteredStudents, setFilteredStudents] = useState<AssignedStudent[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedStudent, setSelectedStudent] = useState<AssignedStudent | null>(null);
-  const [studentDetails, setStudentDetails] = useState<StudentProgressDetails | null>(null);
-  const [studentTodos, setStudentTodos] = useState<TodoDashboardSummary | null>(null);
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const {
+    filteredStudents,
+    searchQuery,
+    setSearchQuery,
+    isLoading,
+    selectedStudent,
+    setSelectedStudent,
+    studentDetails,
+    setStudentDetails,
+    studentTodos,
+    isLoadingDetails,
+    toast,
+    setToast,
+    activeReviewId,
+    setActiveReviewId,
+    tutorFeedback,
+    setTutorFeedback,
+    tutorRating,
+    setTutorRating,
+    isResponding,
+    handleOpenStudentDetails,
+    handleSendFeedback
+  } = useTutorStudentsVM();
 
-  // Review response state
-  const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
-  const [tutorFeedback, setTutorFeedback] = useState('');
-  const [tutorRating, setTutorRating] = useState<number>(5);
-  const [isResponding, setIsResponding] = useState(false);
-
-  const loadStudents = async () => {
-    setIsLoading(true);
-    try {
-      const data = await tutorStudentService.getAssignedStudents();
-      setStudents(data);
-      setFilteredStudents(data);
-    } catch (err) {
-      console.error('Failed to load assigned students:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadStudents();
-  }, []);
-
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredStudents(students);
-    } else {
-      const q = searchQuery.toLowerCase();
-      setFilteredStudents(
-        students.filter(
-          (s) =>
-            s.name.toLowerCase().includes(q) ||
-            s.email.toLowerCase().includes(q) ||
-            s.education?.degree?.toLowerCase().includes(q) ||
-            s.enrolled_courses.some((c) => c.title.toLowerCase().includes(q))
-        )
-      );
-    }
-  }, [searchQuery, students]);
-
-  const handleOpenStudentDetails = async (student: AssignedStudent) => {
-    setSelectedStudent(student);
-    setIsLoadingDetails(true);
-    try {
-      const [details, todos] = await Promise.all([
-        tutorStudentService.getStudentDetails(student.id),
-        todoService.getDashboardSummary(student.id)
-      ]);
-      setStudentDetails(details);
-      setStudentTodos(todos);
-    } catch (err) {
-      console.error('Failed to load student details or todos:', err);
-    } finally {
-      setIsLoadingDetails(false);
-    }
-  };
-
-  const handleSendFeedback = async (reviewId: string) => {
-    if (!tutorFeedback.trim()) {
-      setToast({ message: 'Please provide constructive feedback before submitting', type: 'error' });
-      return;
-    }
-
-    setIsResponding(true);
-    try {
-      await reviewerService.respondToReview(reviewId, tutorFeedback.trim(), 'APPROVED', tutorRating);
-      setToast({ message: 'Feedback and approval recorded successfully!', type: 'success' });
-      setActiveReviewId(null);
-      setTutorFeedback('');
-
-      // Refresh student details
-      if (selectedStudent) {
-        const details = await tutorStudentService.getStudentDetails(selectedStudent.id);
-        setStudentDetails(details);
-      }
-    } catch (err: any) {
-      setToast({ message: err.message || 'Failed to submit feedback', type: 'error' });
-    } finally {
-      setIsResponding(false);
-      setTimeout(() => setToast(null), 4000);
-    }
-  };
 
   return (
     <AppLayout>
@@ -173,33 +101,33 @@ export const TutorStudentsScreen: React.FC = () => {
 
         {/* Students Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="bg-white rounded-3xl border border-neutral-200 p-6 animate-pulse space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-neutral-200" />
-                  <div className="space-y-2 flex-1">
+              <div key={n} className="bg-white rounded-xl border border-neutral-200 p-5 animate-pulse space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-lg bg-neutral-200" />
+                  <div className="space-y-1.5 flex-1">
                     <div className="h-4 bg-neutral-200 rounded w-3/4" />
                     <div className="h-3 bg-neutral-100 rounded w-1/2" />
                   </div>
                 </div>
-                <div className="h-20 bg-neutral-100 rounded-2xl" />
-                <div className="h-10 bg-neutral-200 rounded-xl" />
+                <div className="h-16 bg-neutral-100 rounded-lg" />
+                <div className="h-9 bg-neutral-200 rounded-lg" />
               </div>
             ))}
           </div>
         ) : filteredStudents.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-neutral-200 p-12 text-center max-w-md mx-auto space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-orange-100 text-[#EA580C] flex items-center justify-center mx-auto">
-              <Users size={24} />
+          <div className="bg-white rounded-xl border border-dashed border-neutral-300 p-10 text-center max-w-md mx-auto space-y-3">
+            <div className="w-10 h-10 rounded-lg bg-neutral-100 text-neutral-600 border border-neutral-200 flex items-center justify-center mx-auto">
+              <Users size={20} />
             </div>
-            <h3 className="text-base font-bold text-neutral-900">No Students Found</h3>
+            <h3 className="text-sm font-bold text-neutral-900">No Students Found</h3>
             <p className="text-xs text-neutral-500">
               {searchQuery ? 'No students match your search criteria.' : 'No students have been assigned yet.'}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredStudents.map((st) => {
               const isPrimary = st.is_primary_reviewer;
 
@@ -207,17 +135,17 @@ export const TutorStudentsScreen: React.FC = () => {
                 <div
                   key={st.id}
                   onClick={() => handleOpenStudentDetails(st)}
-                  className={`bg-white rounded-3xl border transition-all duration-300 p-6 flex flex-col justify-between shadow-xs hover:shadow-md cursor-pointer hover:border-orange-300 group ${
+                  className={`bg-white rounded-xl border transition-all duration-200 p-5 flex flex-col justify-between shadow-xs hover:shadow-sm cursor-pointer hover:border-neutral-300 group ${
                     isPrimary
                       ? 'border-orange-500/50 ring-1 ring-orange-500/20'
-                      : 'border-neutral-200'
+                      : 'border-neutral-200/80'
                   }`}
                 >
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     {/* Top Row: Avatar & Status */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-neutral-800 to-neutral-700 text-white font-black text-lg flex items-center justify-center shadow-xs overflow-hidden shrink-0">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-11 h-11 rounded-lg bg-neutral-900 text-white font-bold text-base flex items-center justify-center shadow-xs overflow-hidden shrink-0">
                           {st.avatar_url ? (
                             <img
                               src={st.avatar_url}
@@ -230,7 +158,7 @@ export const TutorStudentsScreen: React.FC = () => {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-base font-bold text-neutral-900 group-hover:text-[#EA580C] transition-colors truncate">
+                          <h3 className="text-sm font-bold text-neutral-900 group-hover:text-[#EA580C] transition-colors truncate">
                             {st.name}
                           </h3>
                           <p className="text-xs text-neutral-500 truncate mt-0.5">
@@ -243,26 +171,26 @@ export const TutorStudentsScreen: React.FC = () => {
                       </div>
 
                       {isPrimary ? (
-                        <span className="shrink-0 text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap shadow-2xs">
+                        <span className="shrink-0 text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200/80 px-2 py-0.5 rounded-md flex items-center gap-1 whitespace-nowrap shadow-2xs">
                           <CheckCircle2 size={11} className="text-[#EA580C] shrink-0" />
                           <span>Primary</span>
                         </span>
                       ) : (
-                        <span className="shrink-0 text-[10px] font-medium text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="shrink-0 text-[10px] font-medium text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-md whitespace-nowrap">
                           Enrolled
                         </span>
                       )}
                     </div>
 
                     {/* Overall Progress Bar */}
-                    <div className="bg-neutral-50 p-3.5 rounded-2xl border border-neutral-100 space-y-2">
+                    <div className="bg-neutral-50 p-3 rounded-lg border border-neutral-100 space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-neutral-600">Curriculum Progress</span>
+                        <span className="font-semibold text-neutral-600">Progress</span>
                         <span className="font-bold text-neutral-900">{st.overall_progress}%</span>
                       </div>
-                      <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-neutral-200 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500"
+                          className="h-full bg-[#EA580C] rounded-full transition-all duration-300"
                           style={{ width: `${st.overall_progress}%` }}
                         />
                       </div>
@@ -333,7 +261,7 @@ export const TutorStudentsScreen: React.FC = () => {
               {/* Slide-over Header */}
               <div className="p-6 border-b border-neutral-200 flex items-center justify-between bg-neutral-50/70 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-neutral-800 to-neutral-700 text-white font-black text-lg flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="w-11 h-11 rounded-lg bg-neutral-900 text-white font-bold text-base flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
                     {selectedStudent.avatar_url ? (
                       <img
                         src={selectedStudent.avatar_url}

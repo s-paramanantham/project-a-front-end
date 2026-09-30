@@ -5,7 +5,6 @@ import {
   BookOpen,
   ChevronRight,
   ChevronLeft,
-  Sparkles,
   HelpCircle,
   Copy,
   Check,
@@ -147,9 +146,9 @@ export const StudyScreen: React.FC = () => {
             </span>
           </div>
 
-          <div className="w-24 sm:w-28 h-2.5 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200">
+          <div className="w-24 sm:w-28 h-2 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200">
             <div
-              className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500"
+              className="h-full bg-[#EA580C] rounded-full transition-all duration-300"
               style={{ width: `${stats?.progressPercent || 0}%` }}
             />
           </div>
@@ -266,14 +265,14 @@ export const StudyScreen: React.FC = () => {
 
           {/* Mastered Celebration Banner if all completed */}
           {stats?.isCompleted && (
-            <div className="p-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-sm flex items-center justify-between gap-4">
+            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-xl shadow-xs flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Award size={22} className="text-white" />
+                <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                  <Award size={18} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">Course Mastered! (100% Complete)</h3>
-                  <p className="text-xs text-emerald-100">
+                  <h3 className="font-bold text-xs sm:text-sm text-emerald-900">Course Mastered! (100% Complete)</h3>
+                  <p className="text-xs text-emerald-700">
                     You have finished every lesson and passed all comprehension questions for {course.title}.
                   </p>
                 </div>
@@ -284,31 +283,31 @@ export const StudyScreen: React.FC = () => {
           {/* Lesson Header */}
           <div className="space-y-3 pb-6 border-b border-neutral-200">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-100 text-[#EA580C]">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-orange-50 text-[#EA580C] border border-orange-200/60">
                 <BookOpen size={12} />
                 <span>Lesson {activeTopicIndex + 1} of {topics.length}</span>
               </span>
 
               {currentTopic.is_completed && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                   <CheckCircle2 size={12} />
-                  <span>Lesson Completed</span>
+                  <span>Completed</span>
                 </span>
               )}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-neutral-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight">
               {currentTopic.title}
             </h1>
 
-            <p className="text-sm text-neutral-600 leading-relaxed max-w-3xl">
+            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed max-w-3xl">
               {currentTopic.description}
             </p>
           </div>
 
           {/* Concept Illustration / Example Image */}
           {currentTopic.image_url && (
-            <div className="rounded-2xl overflow-hidden border border-neutral-200/90 shadow-xs aspect-video max-h-72 w-full bg-neutral-100">
+            <div className="rounded-xl overflow-hidden border border-neutral-200/90 shadow-xs aspect-video max-h-72 w-full bg-neutral-100">
               <img
                 src={currentTopic.image_url}
                 alt={currentTopic.title}
@@ -319,24 +318,24 @@ export const StudyScreen: React.FC = () => {
           )}
 
           {/* In-Depth Explanation & Reading */}
-          <section className="bg-white rounded-2xl border border-neutral-200 p-6 sm:p-8 space-y-4 shadow-xs">
-            <h2 className="text-base font-bold text-neutral-900 flex items-center gap-2">
-              <Sparkles size={16} className="text-[#EA580C]" />
-              <span>Detailed Explanation & Principles</span>
+          <section className="bg-white rounded-xl border border-neutral-200/80 p-5 sm:p-7 space-y-4 shadow-xs">
+            <h2 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
+              <BookOpen size={15} className="text-[#EA580C]" />
+              <span>Explanation & Architecture</span>
             </h2>
 
-            <div className="text-sm text-neutral-700 leading-relaxed whitespace-pre-line space-y-3">
+            <div className="text-xs sm:text-sm text-neutral-700 leading-relaxed whitespace-pre-line space-y-3">
               {currentTopic.explanation}
             </div>
 
             {/* Key Takeaways */}
             {currentTopic.key_takeaways && currentTopic.key_takeaways.length > 0 && (
-              <div className="p-4 bg-orange-50/70 border border-orange-200/80 rounded-xl space-y-2 mt-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#EA580C] flex items-center gap-1.5">
-                  <Lightbulb size={14} />
+              <div className="p-3.5 bg-orange-50/60 border border-orange-200/70 rounded-lg space-y-1.5 mt-4">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#EA580C] flex items-center gap-1.5">
+                  <Lightbulb size={13} />
                   <span>Key Takeaways</span>
                 </h4>
-                <ul className="space-y-1.5 text-xs text-neutral-700">
+                <ul className="space-y-1 text-xs text-neutral-700">
                   {currentTopic.key_takeaways.map((point, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-[#EA580C] font-bold">•</span>
@@ -350,8 +349,8 @@ export const StudyScreen: React.FC = () => {
 
           {/* Interactive Code Example & Live Sample */}
           {currentTopic.code_example && (
-            <section className="bg-neutral-900 text-neutral-100 rounded-2xl overflow-hidden border border-neutral-800 shadow-md">
-              <div className="px-5 py-3 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between">
+            <section className="bg-neutral-900 text-neutral-100 rounded-xl overflow-hidden border border-neutral-800 shadow-sm">
+              <div className="px-4 py-2.5 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
@@ -361,21 +360,21 @@ export const StudyScreen: React.FC = () => {
 
                 <button
                   onClick={() => copyCode(currentTopic.code_example || '')}
-                  className="inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-white px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-white px-2 py-0.5 rounded bg-neutral-800 hover:bg-neutral-700 transition-colors cursor-pointer"
                 >
-                  {copiedCode ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  {copiedCode ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                   <span>{copiedCode ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
 
-              <pre className="p-5 font-mono text-xs sm:text-[13px] overflow-x-auto text-amber-200 leading-relaxed">
+              <pre className="p-4 sm:p-5 font-mono text-xs overflow-x-auto text-amber-200 leading-relaxed">
                 <code>{currentTopic.code_example}</code>
               </pre>
             </section>
           )}
 
           {/* Topic Question & Knowledge Check (Required to Complete Lesson) */}
-          <section className="bg-white rounded-2xl border-2 border-orange-200/90 p-6 sm:p-8 shadow-sm space-y-6">
+          <section className="bg-white rounded-xl border border-neutral-200/90 p-5 sm:p-7 shadow-xs space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-neutral-100 gap-2">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#EA580C] flex items-center justify-center">
@@ -612,14 +611,14 @@ export const StudyScreen: React.FC = () => {
     {/* Send to Reviewer Modal */}
     {isReviewModalOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-xs animate-in fade-in">
-        <div className="bg-white rounded-3xl border border-neutral-200 max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative animate-in zoom-in-95">
+        <div className="bg-white rounded-xl border border-neutral-200 max-w-md w-full p-6 space-y-5 shadow-xl relative animate-in zoom-in-95">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#EA580C] flex items-center justify-center">
-                <Send size={18} />
+              <div className="w-9 h-9 rounded-lg bg-orange-50 text-[#EA580C] border border-orange-200/60 flex items-center justify-center">
+                <Send size={16} />
               </div>
               <div>
-                <h3 className="text-base font-bold text-neutral-900">
+                <h3 className="text-sm font-bold text-neutral-900">
                   Send {reviewType === 'LESSON' ? 'Lesson' : 'Course'} to Reviewer
                 </h3>
                 <p className="text-xs text-neutral-500">
@@ -629,16 +628,16 @@ export const StudyScreen: React.FC = () => {
             </div>
             <button
               onClick={closeReviewModal}
-              className="p-1.5 text-neutral-400 hover:text-neutral-700 rounded-lg hover:bg-neutral-100"
+              className="p-1 text-neutral-400 hover:text-neutral-700 rounded-md hover:bg-neutral-100"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
 
-          <div className="bg-neutral-50 rounded-2xl p-3.5 border border-neutral-100 text-xs text-neutral-700 space-y-1">
-            <p className="font-bold text-neutral-900">{course.title}</p>
+          <div className="bg-neutral-50 rounded-lg p-3 border border-neutral-100 text-xs text-neutral-700 space-y-1">
+            <p className="font-semibold text-neutral-900">{course.title}</p>
             {reviewType === 'LESSON' && currentTopic && (
-              <p className="text-neutral-600">
+              <p className="text-neutral-500">
                 Lesson {activeTopicIndex + 1}: {currentTopic.title}
               </p>
             )}

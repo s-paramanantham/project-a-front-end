@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import {
   BookOpen,
-  GraduationCap,
-  Award,
   User,
   ArrowRight,
-  Sparkles,
   Play,
-  Flame,
   Settings,
   CalendarCheck,
   Clock,
@@ -16,227 +11,176 @@ import {
   Users,
   ChevronRight
 } from 'lucide-react';
-import { authService } from '../../../services/AuthService/authService';
-import { courseService } from '../../../services/CourseService/courseService';
-import { todoService } from '../../../services/TodoService/todoService';
-import type { Course } from '../../../types/courseTypes';
-import type { TodoDashboardSummary, TutorStudentTodoSummary, StudentTodo } from '../../../types/todoTypes';
-import { Card } from '../../reusables/base/Card/Card';
 import { Button } from '../../reusables/base/Button/Button';
 import { AppLayout } from '../../reusables/feature/Navigation/AppLayout';
+import { useDashboardVM } from './dashboard.vm';
 
 export const DashboardScreen: React.FC = () => {
-  const navigate = useNavigate();
-  const user = authService.getCurrentUser();
-  const isTutor = user?.role?.toLowerCase() === 'tutor';
-
-  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
-  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
-
-  // Todo States for Student & Tutor
-  const [studentTodoSummary, setStudentTodoSummary] = useState<TodoDashboardSummary | null>(null);
-  const [tutorTodoSummary, setTutorTodoSummary] = useState<TutorStudentTodoSummary | null>(null);
-  const [isLoadingTodos, setIsLoadingTodos] = useState(true);
-
-  const loadData = async () => {
-    try {
-      const courseRes = await courseService.getCourses({ filter: 'enrolled' });
-      setEnrolledCourses(courseRes.courses);
-    } catch (err) {
-      console.warn('Dashboard could not load enrolled courses:', err);
-    } finally {
-      setIsLoadingCourses(false);
-    }
-
-    try {
-      if (isTutor) {
-        const tSummary = await todoService.getTutorSummary();
-        setTutorTodoSummary(tSummary);
-      } else {
-        const sSummary = await todoService.getDashboardSummary();
-        setStudentTodoSummary(sSummary);
-      }
-    } catch (err) {
-      console.warn('Dashboard could not load todos summary:', err);
-    } finally {
-      setIsLoadingTodos(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [isTutor]);
-
-  const handleToggleTaskStatus = async (task: StudentTodo) => {
-    try {
-      const nextStatus = task.status === 'completed' ? 'in_progress' : 'completed';
-      const res = await todoService.updateTodo(task.id, { status: nextStatus });
-      if (res.rolledOver && res.message) {
-        alert(res.message);
-      }
-      // Reload summary
-      const sSummary = await todoService.getDashboardSummary();
-      setStudentTodoSummary(sSummary);
-    } catch (err: any) {
-      alert(err.message || 'Could not update task');
-    }
-  };
-
-  const todayHours = studentTodoSummary?.today.totalHours || 0;
-  const todayCompletedHours = studentTodoSummary?.today.completedHours || 0;
-  const todayTasks = studentTodoSummary?.today.tasks || [];
-  const tomorrowTasks = studentTodoSummary?.tomorrow.tasks || [];
+  const {
+    user,
+    isTutor,
+    enrolledCourses,
+    isLoadingCourses,
+    studentTodoSummary,
+    tutorTodoSummary,
+    isLoadingTodos,
+    todayHours,
+    todayCompletedHours,
+    todayTasks,
+    tomorrowTasks,
+    handleToggleTaskStatus,
+    navigate
+  } = useDashboardVM();
 
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Welcome Banner */}
-        <div className="bg-gradient-to-r from-orange-500 via-[#EA580C] to-amber-600 text-white rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
-          <div className="max-w-2xl relative z-10">
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 backdrop-blur-xs px-3 py-1 rounded-full mb-3 text-orange-50">
-              <Sparkles size={13} className="text-amber-200" />
-              <span>Project A Active Learner Track</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
-              Welcome back, {user?.name || 'Learner'}!
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-neutral-200/80">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
+              Dashboard
             </h1>
-            <p className="text-orange-100 text-sm leading-relaxed mb-4">
-              Your personalized learning platform is ready. Explore our newly seeded technical curriculum
-              including SQL, HTML, CSS, JavaScript, TypeScript, Node.js, and Python.
+            <p className="text-xs sm:text-sm text-neutral-500 mt-0.5">
+              Welcome back, {user?.name || 'Learner'}. Track your learning progress, study plan, and active courses.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate('/courses')}
-                rightIcon={<ArrowRight size={14} />}
-                className="bg-white text-orange-600 hover:bg-orange-50 font-bold border-none"
-              >
-                Go to Courses
-              </Button>
+          </div>
 
-              {!isTutor ? (
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate('/courses')}
+              rightIcon={<ArrowRight size={14} />}
+              className="text-xs font-semibold cursor-pointer"
+            >
+              Course Catalog
+            </Button>
+
+            {!isTutor ? (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => navigate('/todo')}
+                leftIcon={<CalendarCheck size={14} />}
+                className="text-xs font-semibold shadow-xs cursor-pointer"
+              >
+                Daily Schedule
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate('/tutor/students')}
+                  leftIcon={<Users size={14} />}
+                  className="text-xs font-semibold cursor-pointer"
+                >
+                  Assigned Students
+                </Button>
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => navigate('/todo')}
-                  leftIcon={<CalendarCheck size={14} />}
-                  className="bg-black/30 hover:bg-black/40 text-white font-bold border border-white/30 backdrop-blur-xs"
+                  onClick={() => navigate('/courses/create')}
+                  className="text-xs font-semibold shadow-xs cursor-pointer"
                 >
-                  Daily Todo Planner
+                  + Create Course
                 </Button>
-              ) : (
-                <>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => navigate('/tutor/students')}
-                    leftIcon={<Users size={14} />}
-                    className="bg-black/30 hover:bg-black/40 text-white font-bold border border-white/30 backdrop-blur-xs"
-                  >
-                    View Assigned Students
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => navigate('/courses/create')}
-                    className="bg-amber-500 hover:bg-amber-400 text-neutral-900 font-bold border-none shadow-sm"
-                  >
-                    + Create New Course
-                  </Button>
-                </>
-              )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Top KPI Metrics Strip */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white p-4 rounded-xl border border-neutral-200/80 shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-neutral-500 text-xs font-medium">
+              <span>Enrolled Courses</span>
+              <BookOpen size={15} className="text-neutral-400" />
             </div>
+            <p className="text-xl sm:text-2xl font-bold text-neutral-900 tabular-nums">
+              {enrolledCourses.length}
+            </p>
+            <p className="text-[11px] text-neutral-500">
+              {enrolledCourses.filter((c) => (c.progress_percent || 0) > 0).length} in progress
+            </p>
           </div>
 
-          <div className="absolute right-4 -bottom-6 opacity-10 hidden sm:block pointer-events-none">
-            <BookOpen size={160} />
+          <div className="bg-white p-4 rounded-xl border border-neutral-200/80 shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-neutral-500 text-xs font-medium">
+              <span>Today's Time</span>
+              <Clock size={15} className="text-[#EA580C]" />
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-neutral-900 tabular-nums">
+              {todayHours} hrs
+            </p>
+            <p className="text-[11px] text-neutral-500">
+              {todayCompletedHours} hrs completed
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl border border-neutral-200/80 shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-neutral-500 text-xs font-medium">
+              <span>Tasks Progress</span>
+              <CheckCircle2 size={15} className="text-emerald-500" />
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-neutral-900 tabular-nums">
+              {todayTasks.filter((t) => t.status === 'completed').length} / {todayTasks.length}
+            </p>
+            <p className="text-[11px] text-neutral-500">
+              {todayTasks.length > 0
+                ? `${Math.round((todayTasks.filter((t) => t.status === 'completed').length / todayTasks.length) * 100)}% completed`
+                : 'No tasks today'}
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl border border-neutral-200/80 shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-neutral-500 text-xs font-medium">
+              <span>Tomorrow (Advance)</span>
+              <CalendarCheck size={15} className="text-amber-500" />
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-neutral-900 tabular-nums">
+              {tomorrowTasks.length}
+            </p>
+            <p className="text-[11px] text-neutral-500">
+              {tomorrowTasks.length > 0 ? 'Milestones scheduled' : 'None scheduled'}
+            </p>
           </div>
         </div>
 
         {/* SECTION: DAILY TODO & STUDY SCHEDULE WIDGET */}
         {!isTutor ? (
           /* STUDENT TODO DASHBOARD WIDGET */
-          <div className="bg-white rounded-3xl border border-neutral-200/90 p-6 shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-orange-100 text-[#EA580C] flex items-center justify-center font-bold">
-                  <CalendarCheck size={20} />
+          <div className="bg-white rounded-xl border border-neutral-200/80 p-5 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-neutral-100 text-neutral-700 flex items-center justify-center font-bold">
+                  <CalendarCheck size={16} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base sm:text-lg font-bold text-neutral-900">
-                      Today's Study Plan & Tasks
+                    <h2 className="text-sm sm:text-base font-bold text-neutral-900">
+                      Today's Study Plan
                     </h2>
-                    <span className="text-[11px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded">
                       {studentTodoSummary?.today.date || 'Today'}
                     </span>
                   </div>
                   <p className="text-xs text-neutral-500">
-                    Track your daily hours (up to 24h capacity). Plan tomorrow 1 day in advance with scheduled status.
+                    Your scheduled learning milestones and active sessions for today.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate('/todo')}
-                  rightIcon={<ChevronRight size={14} />}
-                  className="text-xs font-bold"
-                >
-                  Open Full Calendar & Planner
-                </Button>
-              </div>
-            </div>
-
-            {/* Daily Hours Capacity Gauge */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100 flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-orange-100 text-[#EA580C] flex items-center justify-center shrink-0">
-                  <Clock size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] text-neutral-400 font-semibold uppercase block">
-                    Today's Allocation
-                  </span>
-                  <span className="text-sm font-extrabold text-neutral-900">
-                    {todayHours} hrs planned
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100 flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                  <CheckCircle2 size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] text-neutral-400 font-semibold uppercase block">
-                    Completed Today
-                  </span>
-                  <span className="text-sm font-extrabold text-neutral-900">
-                    {todayCompletedHours} hrs ({todayTasks.filter((t) => t.status === 'completed').length} tasks)
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-100 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] text-neutral-500 font-semibold uppercase block">
-                    Tomorrow (1-Day Advance)
-                  </span>
-                  <span className="text-sm font-extrabold text-[#EA580C]">
-                    {tomorrowTasks.length} {tomorrowTasks.length === 1 ? 'task' : 'tasks'} scheduled
-                  </span>
-                </div>
-                <button
-                  onClick={() => navigate('/todo')}
-                  className="text-xs font-bold text-[#EA580C] hover:underline cursor-pointer"
-                >
-                  + Plan
-                </button>
-              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate('/todo')}
+                rightIcon={<ChevronRight size={13} />}
+                className="text-xs font-semibold cursor-pointer self-start sm:self-auto"
+              >
+                Open Calendar
+              </Button>
             </div>
 
             {/* Today's Tasks List Preview */}
@@ -304,17 +248,17 @@ export const DashboardScreen: React.FC = () => {
                 })}
               </div>
             ) : (
-              <div className="p-6 bg-neutral-50 rounded-2xl text-center border border-dashed border-neutral-200 flex flex-col items-center justify-center gap-2">
-                <Clock size={24} className="text-neutral-400" />
-                <p className="text-xs font-bold text-neutral-800">No tasks logged for today yet</p>
+              <div className="p-6 bg-neutral-50 rounded-xl text-center border border-dashed border-neutral-200 flex flex-col items-center justify-center gap-2">
+                <Clock size={20} className="text-neutral-400" />
+                <p className="text-xs font-semibold text-neutral-800">No tasks planned for today</p>
                 <p className="text-[11px] text-neutral-400 max-w-sm">
-                  Plan your hours and schedule tasks using our interactive 24-hour study calendar.
+                  Add learning milestones or study topics to track your daily progress.
                 </p>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={() => navigate('/todo')}
-                  className="mt-1 text-xs font-bold"
+                  className="mt-1 text-xs font-semibold"
                 >
                   + Add Today's Tasks
                 </Button>
@@ -323,18 +267,18 @@ export const DashboardScreen: React.FC = () => {
           </div>
         ) : (
           /* TUTOR VIEW: ASSIGNED STUDENTS DAILY ACTIVITY WIDGET */
-          <div className="bg-white rounded-3xl border border-neutral-200/90 p-6 shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-orange-100 text-[#EA580C] flex items-center justify-center font-bold">
-                  <Users size={20} />
+          <div className="bg-white rounded-xl border border-neutral-200/80 p-5 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-neutral-100 text-neutral-700 flex items-center justify-center font-bold">
+                  <Users size={16} />
                 </div>
                 <div>
-                  <h2 className="text-base sm:text-lg font-bold text-neutral-900">
-                    Assigned Students Daily Study Tasks & Hours
+                  <h2 className="text-sm sm:text-base font-bold text-neutral-900">
+                    Assigned Students Activity
                   </h2>
                   <p className="text-xs text-neutral-500">
-                    Real-time diligence tracking of your students' planned hours and progress today ({tutorTodoSummary?.date || 'Today'}).
+                    Daily planned hours and completion status for your enrolled students ({tutorTodoSummary?.date || 'Today'}).
                   </p>
                 </div>
               </div>
@@ -343,27 +287,27 @@ export const DashboardScreen: React.FC = () => {
                 variant="secondary"
                 size="sm"
                 onClick={() => navigate('/tutor/students')}
-                rightIcon={<ChevronRight size={14} />}
-                className="text-xs font-bold"
+                rightIcon={<ChevronRight size={13} />}
+                className="text-xs font-semibold cursor-pointer"
               >
-                View All Assigned Students
+                View All Students
               </Button>
             </div>
 
             {isLoadingTodos ? (
               <div className="py-6 text-center text-xs text-neutral-400 animate-pulse">
-                Loading students daily study records...
+                Loading student activity records...
               </div>
             ) : tutorTodoSummary && tutorTodoSummary.students.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {tutorTodoSummary.students.map((st) => (
                   <div
                     key={st.student_id}
                     onClick={() => navigate('/tutor/students')}
-                    className="p-4 rounded-2xl border border-neutral-200 hover:border-orange-300 hover:shadow-xs transition-all cursor-pointer bg-neutral-50/60 space-y-3"
+                    className="p-3.5 rounded-xl border border-neutral-200 hover:border-neutral-300 hover:shadow-xs transition-all cursor-pointer bg-neutral-50/50 space-y-2.5"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-neutral-800 to-neutral-700 text-white font-bold flex items-center justify-center text-xs overflow-hidden shrink-0">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-neutral-900 text-white font-bold flex items-center justify-center text-xs overflow-hidden shrink-0">
                         {st.avatar_url ? (
                           <img src={st.avatar_url} alt={st.student_name} className="w-full h-full object-cover" />
                         ) : (
@@ -371,16 +315,16 @@ export const DashboardScreen: React.FC = () => {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="text-xs font-bold text-neutral-900 truncate">{st.student_name}</h4>
-                        <p className="text-[11px] text-neutral-500 truncate">{st.student_email}</p>
+                        <h4 className="text-xs font-semibold text-neutral-900 truncate">{st.student_name}</h4>
+                        <p className="text-[11px] text-neutral-400 truncate">{st.student_email}</p>
                       </div>
                     </div>
 
                     {/* Hours Gauge */}
-                    <div className="bg-white p-2.5 rounded-xl border border-neutral-100 space-y-1.5">
+                    <div className="bg-white p-2.5 rounded-lg border border-neutral-100 space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-neutral-500 font-medium">Daily Planned</span>
-                        <span className="font-extrabold text-neutral-900">{st.total_hours}h / 24h</span>
+                        <span className="font-semibold text-neutral-900">{st.total_hours}h</span>
                       </div>
                       <div className="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden">
                         <div
@@ -412,11 +356,11 @@ export const DashboardScreen: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="p-6 bg-neutral-50 rounded-2xl text-center border border-dashed border-neutral-200">
-                <Users size={24} className="text-neutral-400 mx-auto mb-2" />
-                <p className="text-xs font-bold text-neutral-800">No student activity logged today</p>
+              <div className="p-6 bg-neutral-50 rounded-xl text-center border border-dashed border-neutral-200">
+                <Users size={20} className="text-neutral-400 mx-auto mb-1.5" />
+                <p className="text-xs font-semibold text-neutral-800">No student activity logged today</p>
                 <p className="text-[11px] text-neutral-400 mt-0.5">
-                  As your students add daily study tasks and plan schedules, their hours will appear here.
+                  As your students schedule daily tasks, their activity will display here.
                 </p>
               </div>
             )}
@@ -424,27 +368,23 @@ export const DashboardScreen: React.FC = () => {
         )}
 
         {/* Learning Quick Overview & Profile */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Courses Summary Card */}
-          <Card className="md:col-span-2">
-            <div className="flex items-center justify-between pb-4 border-b border-neutral-100 mb-5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#EA580C] flex items-center justify-center">
-                  <BookOpen size={18} />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-neutral-900">Enrolled Courses</h2>
-                  <p className="text-xs text-neutral-500">Your current learning journey</p>
-                </div>
+          <div className="md:col-span-2 bg-white rounded-xl border border-neutral-200/80 p-5 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 mb-4">
+              <div className="flex items-center gap-2">
+                <BookOpen size={16} className="text-neutral-700" />
+                <h2 className="text-sm font-bold text-neutral-900">Enrolled Courses</h2>
               </div>
 
               <Button
                 variant="text"
                 size="sm"
                 onClick={() => navigate('/courses')}
-                rightIcon={<ArrowRight size={14} />}
+                rightIcon={<ArrowRight size={13} />}
+                className="text-xs font-semibold"
               >
-                View Catalog
+                Browse All
               </Button>
             </div>
 
@@ -453,14 +393,14 @@ export const DashboardScreen: React.FC = () => {
                 Loading enrolled courses...
               </div>
             ) : enrolledCourses.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {enrolledCourses.slice(0, 3).map((c) => (
                   <div
                     key={c.id}
-                    className="p-3.5 bg-neutral-50 hover:bg-orange-50/40 border border-neutral-100 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors"
+                    className="p-3 bg-neutral-50/70 hover:bg-neutral-50 border border-neutral-200/70 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-lg overflow-hidden shrink-0 bg-neutral-200">
+                      <div className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-neutral-200">
                         <img
                           src={c.image}
                           alt={c.title}
@@ -471,8 +411,8 @@ export const DashboardScreen: React.FC = () => {
                         />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-neutral-900 truncate">{c.title}</p>
-                        <p className="text-[11px] text-neutral-500 truncate">{c.publisher}</p>
+                        <p className="text-xs font-semibold text-neutral-900 truncate">{c.title}</p>
+                        <p className="text-[11px] text-neutral-400 truncate">{c.publisher}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="w-20 sm:w-24 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
                             <div
@@ -480,7 +420,7 @@ export const DashboardScreen: React.FC = () => {
                               style={{ width: `${c.progress_percent || 0}%` }}
                             />
                           </div>
-                          <span className="text-[10px] font-bold text-neutral-600">
+                          <span className="text-[10px] font-semibold text-neutral-600">
                             {c.progress_percent || 0}%
                           </span>
                         </div>
@@ -492,117 +432,98 @@ export const DashboardScreen: React.FC = () => {
                         variant="primary"
                         size="sm"
                         onClick={() => navigate(`/courses/${c.id}/study`)}
-                        leftIcon={<Play size={12} className="fill-white" />}
-                        className="text-xs py-1.5 px-3"
+                        leftIcon={<Play size={11} className="fill-white" />}
+                        className="text-xs py-1 px-2.5"
                       >
-                        {c.progress_percent && c.progress_percent > 0 ? 'Continue' : 'Study'}
+                        {c.progress_percent && c.progress_percent > 0 ? 'Continue' : 'Start'}
                       </Button>
                     </div>
                   </div>
                 ))}
                 {enrolledCourses.length > 3 && (
                   <p className="text-xs text-center text-neutral-500 pt-1">
-                    + {enrolledCourses.length - 3} more courses
+                    + {enrolledCourses.length - 3} more enrolled courses
                   </p>
                 )}
               </div>
             ) : (
-              <div className="text-center py-6 px-4 bg-orange-50/40 rounded-xl border border-orange-100">
-                <Sparkles size={24} className="text-[#EA580C] mx-auto mb-2" />
-                <p className="text-xs font-semibold text-neutral-800 mb-1">
-                  You haven't enrolled in any courses yet
+              <div className="text-center py-6 px-4 bg-neutral-50 rounded-lg border border-dashed border-neutral-200">
+                <BookOpen size={20} className="text-neutral-400 mx-auto mb-1.5" />
+                <p className="text-xs font-semibold text-neutral-800 mb-0.5">
+                  No courses enrolled yet
                 </p>
-                <p className="text-[11px] text-neutral-500 mb-4 max-w-sm mx-auto">
-                  Sample courses like SQL, HTML, CSS, JavaScript, TypeScript, Node.js, and Python are waiting!
+                <p className="text-[11px] text-neutral-400 mb-3 max-w-sm mx-auto">
+                  Browse the catalog to enroll in SQL, TypeScript, Python, and more.
                 </p>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={() => navigate('/courses')}
                   rightIcon={<ArrowRight size={13} />}
+                  className="text-xs font-semibold"
                 >
-                  Explore & Enroll
+                  Explore Catalog
                 </Button>
               </div>
             )}
-          </Card>
+          </div>
 
           {/* Profile & Student Status Card */}
-          <Card>
-            <div className="flex items-center justify-between pb-4 border-b border-neutral-100 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#EA580C] flex items-center justify-center">
-                  <User size={18} />
+          <div className="bg-white rounded-xl border border-neutral-200/80 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-neutral-100 mb-3.5">
+                <div className="flex items-center gap-2">
+                  <User size={16} className="text-neutral-700" />
+                  <h2 className="text-sm font-bold text-neutral-900">
+                    Profile Overview
+                  </h2>
                 </div>
-                <h2 className="text-sm font-bold text-neutral-900">
-                  {isTutor ? 'Tutor Profile' : 'Student Profile'}
-                </h2>
-              </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-[#EA580C] border border-orange-200">
-                {isTutor ? <Award size={12} /> : <GraduationCap size={12} />}
-                <span className="capitalize">{user?.role || 'Student'}</span>
-              </span>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="p-2.5 bg-neutral-50 rounded-lg">
-                <span className="text-neutral-400 block text-[10px]">Full Name</span>
-                <span className="font-semibold text-neutral-800">{user?.name || 'N/A'}</span>
-              </div>
-              <div className="p-2.5 bg-neutral-50 rounded-lg">
-                <span className="text-neutral-400 block text-[10px]">Email Address</span>
-                <span className="font-semibold text-neutral-800 truncate block">{user?.email || 'N/A'}</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-neutral-100 text-neutral-700 border border-neutral-200/70 capitalize">
+                  {user?.role || 'Student'}
+                </span>
               </div>
 
-              {user?.education?.degree ? (
-                <div className="p-2.5 bg-neutral-50 rounded-lg">
-                  <span className="text-neutral-400 block text-[10px]">Education</span>
-                  <span className="font-semibold text-neutral-800 truncate block">
-                    {user.education.degree} {user.education.institution ? `• ${user.education.institution}` : ''}
-                  </span>
+              <div className="space-y-2 text-xs">
+                <div className="p-2 bg-neutral-50/80 rounded-md">
+                  <span className="text-neutral-400 block text-[10px]">Full Name</span>
+                  <span className="font-semibold text-neutral-800">{user?.name || 'N/A'}</span>
                 </div>
-              ) : null}
-
-              {user?.work?.jobTitle ? (
-                <div className="p-2.5 bg-neutral-50 rounded-lg">
-                  <span className="text-neutral-400 block text-[10px]">Work</span>
-                  <span className="font-semibold text-neutral-800 truncate block">
-                    {user.work.jobTitle} {user.work.company ? `@ ${user.work.company}` : ''}
-                  </span>
+                <div className="p-2 bg-neutral-50/80 rounded-md">
+                  <span className="text-neutral-400 block text-[10px]">Email Address</span>
+                  <span className="font-semibold text-neutral-800 truncate block">{user?.email || 'N/A'}</span>
                 </div>
-              ) : null}
 
-              {user?.address?.city ? (
-                <div className="p-2.5 bg-neutral-50 rounded-lg">
-                  <span className="text-neutral-400 block text-[10px]">Location</span>
-                  <span className="font-semibold text-neutral-800 truncate block">
-                    {user.address.city}, {user.address.country}
-                  </span>
-                </div>
-              ) : null}
-            </div>
+                {user?.education?.degree ? (
+                  <div className="p-2 bg-neutral-50/80 rounded-md">
+                    <span className="text-neutral-400 block text-[10px]">Education</span>
+                    <span className="font-semibold text-neutral-800 truncate block">
+                      {user.education.degree} {user.education.institution ? `• ${user.education.institution}` : ''}
+                    </span>
+                  </div>
+                ) : null}
 
-            <div className="mt-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#EA580C] flex items-center justify-center shrink-0">
-                <Flame size={16} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-neutral-800">Learning Streak</p>
-                <p className="text-[10px] text-neutral-500">Keep studying daily to maintain momentum!</p>
+                {user?.work?.jobTitle ? (
+                  <div className="p-2 bg-neutral-50/80 rounded-md">
+                    <span className="text-neutral-400 block text-[10px]">Work</span>
+                    <span className="font-semibold text-neutral-800 truncate block">
+                      {user.work.jobTitle} {user.work.company ? `@ ${user.work.company}` : ''}
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
 
             <Button
-              variant="soft"
+              variant="secondary"
               size="sm"
               fullWidth
-              className="mt-3 text-xs"
+              className="mt-4 text-xs font-semibold cursor-pointer"
               onClick={() => navigate('/profile/settings')}
-              leftIcon={<Settings size={14} />}
+              leftIcon={<Settings size={13} />}
             >
-              Profile Settings & Edit Details
+              Account Settings
             </Button>
-          </Card>
+          </div>
         </div>
       </div>
     </AppLayout>

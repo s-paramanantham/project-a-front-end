@@ -9,7 +9,6 @@ import {
   Briefcase,
   MapPin,
   Check,
-  Sparkles,
   Settings,
   ArrowRight
 } from 'lucide-react';
@@ -93,19 +92,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         <div className="fixed inset-0 bg-neutral-900/50 backdrop-blur-xs" onClick={onClose} />
 
         {/* Modal Dialog */}
-        <div className="relative bg-white rounded-3xl shadow-2xl border border-neutral-200 w-full max-w-2xl max-h-[92vh] overflow-hidden z-10 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        <div className="relative bg-white rounded-xl shadow-2xl border border-neutral-200 w-full max-w-2xl max-h-[92vh] overflow-hidden z-10 flex flex-col animate-in fade-in zoom-in-95 duration-200">
           {/* Cover Picture Area */}
-          <div className="relative h-36 sm:h-44 w-full bg-gradient-to-r from-orange-500 via-[#EA580C] to-amber-600 overflow-hidden shrink-0">
+          <div className="relative h-36 sm:h-44 w-full bg-neutral-900 border-b border-neutral-800 overflow-hidden shrink-0">
             {user?.coverUrl ? (
               <img src={user.coverUrl} alt="Profile Cover" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full opacity-20 flex items-center justify-center text-white">
-                <Sparkles size={80} />
+                <BookOpen size={64} />
               </div>
             )}
 
             {/* Change Cover Button */}
-            <label className="absolute top-3 left-3 bg-neutral-900/60 hover:bg-neutral-900/80 text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl backdrop-blur-md cursor-pointer flex items-center gap-1.5 transition-all">
+            <label className="absolute top-3 left-3 bg-neutral-900/60 hover:bg-neutral-900/80 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg backdrop-blur-md cursor-pointer flex items-center gap-1.5 transition-all">
               <Camera size={13} />
               <span>Change Cover</span>
               <input
@@ -127,10 +126,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
           {/* Modal Header Body: Avatar & Direct Profile Settings Navigation Button */}
           <div className="px-6 pt-0 pb-3 border-b border-neutral-100 shrink-0 relative bg-white">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between -mt-14 mb-4 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between -mt-12 mb-4 gap-3">
               {/* Avatar with Camera badge */}
               <div className="relative self-start">
-                <div className="w-24 h-24 rounded-2xl bg-white p-1 shadow-lg border border-neutral-100 overflow-hidden">
+                <div className="w-20 h-20 rounded-xl bg-white p-1 shadow-lg border border-neutral-200 overflow-hidden">
                   {user?.avatarUrl ? (
                     <img
                       src={user.avatarUrl}
@@ -216,16 +215,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 </div>
 
                 <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100 text-center col-span-2 sm:col-span-1">
-                  <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
-                    <Sparkles size={16} />
-                    <span className="text-lg font-bold text-neutral-900">Pro</span>
+                  <div className="flex items-center justify-center gap-1 text-emerald-600 mb-1">
+                    <Check size={16} />
+                    <span className="text-lg font-bold text-neutral-900">Standard</span>
                   </div>
-                  <span className="text-[11px] text-neutral-500 font-medium">Learner Tier</span>
+                  <span className="text-[11px] text-neutral-500 font-medium">Account Tier</span>
                 </div>
               </div>
 
               {/* Education Snapshot */}
-              <div className="p-4 bg-white border border-neutral-200 rounded-2xl space-y-2">
+              <div className="p-4 bg-white border border-neutral-200 rounded-xl space-y-2">
                 <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
                   <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
                     <GraduationCap size={15} className="text-[#EA580C]" />

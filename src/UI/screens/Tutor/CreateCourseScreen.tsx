@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import {
   BookOpen,
   Layers,
@@ -10,403 +9,72 @@ import {
   Trash2,
   Code2,
   HelpCircle,
-  Sparkles,
   Camera,
   AlertCircle,
   Clock,
-  Check
+  Check,
+  Copy
 } from 'lucide-react';
 import { AppLayout } from '../../reusables/feature/Navigation/AppLayout';
 import { Card } from '../../reusables/base/Card/Card';
 import { Button } from '../../reusables/base/Button/Button';
 import { Input } from '../../reusables/base/Input/Input';
 import { ImageCropperModal } from '../../reusables/feature/Navigation/ImageCropperModal';
-import { courseService } from '../../../services/CourseService/courseService';
-import { authService } from '../../../services/AuthService/authService';
-
-interface QuizQuestionForm {
-  question_text: string;
-  question_options: [string, string, string, string];
-  correct_option_index: number;
-  question_explanation: string;
-}
-
-interface LessonForm {
-  title: string;
-  description: string;
-  explanation: string;
-  code_example: string;
-  code_language: string;
-  image_url: string;
-  key_takeaways: string[];
-  questions: QuizQuestionForm[];
-}
-
-const CATEGORIES = [
-  'Web Development',
-  'Frontend Engineering',
-  'Backend Engineering',
-  'Cloud & DevOps',
-  'Data Science & AI',
-  'Programming Languages',
-  'Database Management',
-  'Cybersecurity'
-];
-
-const CODE_LANGUAGES = [
-  'javascript',
-  'typescript',
-  'html',
-  'css',
-  'python',
-  'sql',
-  'bash',
-  'json'
-];
-
-const DEFAULT_IMAGE_PLACEHOLDERS = [
-  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&auto=format&fit=crop'
-];
+import {
+  CATEGORIES,
+  CODE_LANGUAGES,
+  DEFAULT_IMAGE_PLACEHOLDERS,
+  useCreateCourseVM
+} from './createCourse.vm';
 
 export const CreateCourseScreen: React.FC = () => {
-  const navigate = useNavigate();
-  const currentUser = authService.getCurrentUser();
+  const {
+    navigate,
+    currentStep,
+    setCurrentStep,
+    title,
+    setTitle,
+    publisher,
+    setPublisher,
+    description,
+    setDescription,
+    image,
+    setImage,
+    level,
+    setLevel,
+    duration,
+    setDuration,
+    category,
+    setCategory,
+    isCropperOpen,
+    setIsCropperOpen,
+    rawImageForCrop,
+    setRawImageForCrop,
+    lessons,
+    activeLessonIndex,
+    setActiveLessonIndex,
+    activeLesson,
+    errorMessage,
+    isSubmitting,
+    validateStep1,
+    validateStep2,
+    handleFileChange,
+    handleNextToStep2,
+    handleNextToStep3,
+    handleAddLesson,
+    handleRemoveLesson,
+    updateCurrentLesson,
+    handleTakeawayChange,
+    handleAddTakeaway,
+    handleRemoveTakeaway,
+    handleAddQuestion,
+    handleDuplicateQuestion,
+    handleRemoveQuestion,
+    handleQuestionFieldChange,
+    handleQuestionOptionChange,
+    handlePublishCourse
+  } = useCreateCourseVM();
 
-  // Wizard Steps: 1 = Course Details, 2 = Lessons Builder, 3 = Review & Publish
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-
-  // Page 1: Course Info
-  const [title, setTitle] = useState('');
-  const [publisher, setPublisher] = useState(currentUser?.name || 'Tutor');
-  const [description, setDescription] = useState('');
-  const [image, setImage] = useState(DEFAULT_IMAGE_PLACEHOLDERS[0]);
-  const [level, setLevel] = useState('Beginner');
-  const [duration, setDuration] = useState('12 Hours');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-
-  // Image crop modal for thumbnail
-  const [isCropperOpen, setIsCropperOpen] = useState(false);
-  const [rawImageForCrop, setRawImageForCrop] = useState<string | null>(null);
-
-  // Page 2: Lessons
-  const [lessons, setLessons] = useState<LessonForm[]>([
-    {
-      title: '',
-      description: '',
-      explanation: '',
-      code_example: '',
-      code_language: 'javascript',
-      image_url: DEFAULT_IMAGE_PLACEHOLDERS[1],
-      key_takeaways: [''],
-      questions: [
-        {
-          question_text: '',
-          question_options: ['', '', '', ''],
-          correct_option_index: 0,
-          question_explanation: ''
-        }
-      ]
-    }
-  ]);
-  const [activeLessonIndex, setActiveLessonIndex] = useState(0);
-
-  // Validation / Submission states
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Handle Cover file selection for crop
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setRawImageForCrop(reader.result as string);
-      setIsCropperOpen(true);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  };
-
-  // Step 1 Validation
-  const validateStep1 = (): boolean => {
-    setErrorMessage(null);
-    if (!title.trim()) {
-      setErrorMessage('Please enter a course title.');
-      return false;
-    }
-    if (!publisher.trim()) {
-      setErrorMessage('Please enter the publisher / instructor name.');
-      return false;
-    }
-    if (!category.trim()) {
-      setErrorMessage('Please select a course category.');
-      return false;
-    }
-    if (!level.trim()) {
-      setErrorMessage('Please select a difficulty level.');
-      return false;
-    }
-    if (!duration.trim()) {
-      setErrorMessage('Please enter estimated course duration (e.g. 10 Hours).');
-      return false;
-    }
-    if (!image.trim()) {
-      setErrorMessage('Please provide a course thumbnail image.');
-      return false;
-    }
-    if (!description.trim()) {
-      setErrorMessage('Please enter a comprehensive course description.');
-      return false;
-    }
-    return true;
-  };
-
-  // Step 2 Validation (Without skipping a single field)
-  const validateStep2 = (): boolean => {
-    setErrorMessage(null);
-    if (lessons.length === 0) {
-      setErrorMessage('At least one curriculum lesson is required.');
-      return false;
-    }
-
-    for (let i = 0; i < lessons.length; i++) {
-      const l = lessons[i];
-      const num = i + 1;
-
-      if (!l.title.trim()) {
-        setActiveLessonIndex(i);
-        setErrorMessage(`Lesson #${num}: Title cannot be empty.`);
-        return false;
-      }
-      if (!l.description.trim()) {
-        setActiveLessonIndex(i);
-        setErrorMessage(`Lesson #${num}: Short summary description is required.`);
-        return false;
-      }
-      if (!l.explanation.trim()) {
-        setActiveLessonIndex(i);
-        setErrorMessage(`Lesson #${num}: Full concept explanation is required.`);
-        return false;
-      }
-      if (!l.code_example.trim()) {
-        setActiveLessonIndex(i);
-        setErrorMessage(`Lesson #${num}: Code example is required.`);
-        return false;
-      }
-      if (!l.code_language.trim()) {
-        setActiveLessonIndex(i);
-        setErrorMessage(`Lesson #${num}: Code language must be selected.`);
-        return false;
-      }
-      const validTakeaways = l.key_takeaways.filter((t) => t.trim().length > 0);
-      if (validTakeaways.length === 0) {
-        setActiveLessonIndex(i);
-        setErrorMessage(`Lesson #${num}: Must include at least 1 key takeaway.`);
-        return false;
-      }
-      if (!l.questions || l.questions.length === 0) {
-        setActiveLessonIndex(i);
-        setErrorMessage(`Lesson #${num}: Must include at least 1 quiz question.`);
-        return false;
-      }
-      for (let qIdx = 0; qIdx < l.questions.length; qIdx++) {
-        const q = l.questions[qIdx];
-        const qNum = qIdx + 1;
-        if (!q.question_text.trim()) {
-          setActiveLessonIndex(i);
-          setErrorMessage(`Lesson #${num}, Question #${qNum}: Quiz question text is required.`);
-          return false;
-        }
-        for (let o = 0; o < 4; o++) {
-          if (!q.question_options[o]?.trim()) {
-            setActiveLessonIndex(i);
-            setErrorMessage(`Lesson #${num}, Question #${qNum}: Option ${String.fromCharCode(65 + o)} is empty.`);
-            return false;
-          }
-        }
-        if (!q.question_explanation.trim()) {
-          setActiveLessonIndex(i);
-          setErrorMessage(`Lesson #${num}, Question #${qNum}: Quiz answer explanation is required.`);
-          return false;
-        }
-      }
-    }
-    return true;
-  };
-
-  const handleNextToStep2 = () => {
-    if (validateStep1()) {
-      setCurrentStep(2);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleNextToStep3 = () => {
-    if (validateStep2()) {
-      setCurrentStep(3);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  // Add another lesson
-  const handleAddLesson = () => {
-    const newLesson: LessonForm = {
-      title: '',
-      description: '',
-      explanation: '',
-      code_example: '',
-      code_language: 'javascript',
-      image_url: DEFAULT_IMAGE_PLACEHOLDERS[(lessons.length + 1) % DEFAULT_IMAGE_PLACEHOLDERS.length],
-      key_takeaways: [''],
-      questions: [
-        {
-          question_text: '',
-          question_options: ['', '', '', ''],
-          correct_option_index: 0,
-          question_explanation: ''
-        }
-      ]
-    };
-    setLessons([...lessons, newLesson]);
-    setActiveLessonIndex(lessons.length);
-  };
-
-  // Remove lesson
-  const handleRemoveLesson = (indexToRemove: number) => {
-    if (lessons.length <= 1) {
-      setErrorMessage('Courses must contain at least one lesson.');
-      return;
-    }
-    const filtered = lessons.filter((_, idx) => idx !== indexToRemove);
-    setLessons(filtered);
-    setActiveLessonIndex(Math.max(0, indexToRemove - 1));
-  };
-
-  // Update active lesson fields
-  const updateCurrentLesson = (fields: Partial<LessonForm>) => {
-    setLessons((prev) => {
-      const copy = [...prev];
-      copy[activeLessonIndex] = { ...copy[activeLessonIndex], ...fields };
-      return copy;
-    });
-  };
-
-  // Takeaway helpers
-  const handleTakeawayChange = (tIdx: number, val: string) => {
-    const list = [...lessons[activeLessonIndex].key_takeaways];
-    list[tIdx] = val;
-    updateCurrentLesson({ key_takeaways: list });
-  };
-
-  const handleAddTakeaway = () => {
-    const list = [...lessons[activeLessonIndex].key_takeaways, ''];
-    updateCurrentLesson({ key_takeaways: list });
-  };
-
-  const handleRemoveTakeaway = (tIdx: number) => {
-    if (lessons[activeLessonIndex].key_takeaways.length <= 1) return;
-    const list = lessons[activeLessonIndex].key_takeaways.filter((_, idx) => idx !== tIdx);
-    updateCurrentLesson({ key_takeaways: list });
-  };
-
-  // Question helpers for active lesson
-  const handleAddQuestion = () => {
-    const curQuestions = lessons[activeLessonIndex].questions || [];
-    const newQ: QuizQuestionForm = {
-      question_text: '',
-      question_options: ['', '', '', ''],
-      correct_option_index: 0,
-      question_explanation: ''
-    };
-    updateCurrentLesson({ questions: [...curQuestions, newQ] });
-  };
-
-  const handleRemoveQuestion = (qIdx: number) => {
-    const curQuestions = lessons[activeLessonIndex].questions || [];
-    if (curQuestions.length <= 1) return;
-    const filtered = curQuestions.filter((_, idx) => idx !== qIdx);
-    updateCurrentLesson({ questions: filtered });
-  };
-
-  const handleQuestionFieldChange = (qIdx: number, fields: Partial<QuizQuestionForm>) => {
-    const curQuestions = [...(lessons[activeLessonIndex].questions || [])];
-    curQuestions[qIdx] = { ...curQuestions[qIdx], ...fields };
-    updateCurrentLesson({ questions: curQuestions });
-  };
-
-  const handleQuestionOptionChange = (qIdx: number, optIdx: number, val: string) => {
-    const curQuestions = [...(lessons[activeLessonIndex].questions || [])];
-    const opts: [string, string, string, string] = [...curQuestions[qIdx].question_options];
-    opts[optIdx] = val;
-    curQuestions[qIdx] = { ...curQuestions[qIdx], question_options: opts };
-    updateCurrentLesson({ questions: curQuestions });
-  };
-
-  // Final Publish Handler
-  const handlePublishCourse = async () => {
-    if (!validateStep1()) {
-      setCurrentStep(1);
-      return;
-    }
-    if (!validateStep2()) {
-      setCurrentStep(2);
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage(null);
-
-    try {
-      const payload = {
-        title: title.trim(),
-        publisher: publisher.trim(),
-        description: description.trim(),
-        image: image.trim(),
-        level,
-        duration,
-        category,
-        topics: lessons.map((l, idx) => ({
-          order_index: idx + 1,
-          title: l.title.trim(),
-          description: l.description.trim(),
-          explanation: l.explanation.trim(),
-          code_example: l.code_example.trim(),
-          code_language: l.code_language.trim(),
-          image_url: l.image_url.trim() || null,
-          key_takeaways: l.key_takeaways.map((k) => k.trim()).filter(Boolean),
-          question_text: l.questions[0].question_text.trim(),
-          question_options: l.questions[0].question_options.map((o) => o.trim()),
-          correct_option_index: l.questions[0].correct_option_index,
-          question_explanation: l.questions[0].question_explanation.trim(),
-          questions: l.questions.map((q, qIndex) => ({
-            id: `q-${qIndex + 1}`,
-            question_text: q.question_text.trim(),
-            question_options: q.question_options.map((o) => o.trim()),
-            correct_option_index: q.correct_option_index,
-            question_explanation: q.question_explanation.trim()
-          }))
-        }))
-      };
-
-      const result = await courseService.createCourse(payload);
-
-      // Successfully created! Navigate to the newly created course study or catalog
-      navigate(`/courses/${result.course.id}/study`);
-    } catch (err: any) {
-      console.error('Course creation failed:', err);
-      setErrorMessage(
-        err?.response?.data?.message || err?.message || 'Failed to create course. Please review all fields.'
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const activeLesson = lessons[activeLessonIndex] || lessons[0];
 
   return (
     <AppLayout>
@@ -464,7 +132,7 @@ export const CreateCourseScreen: React.FC = () => {
                 size="sm"
                 onClick={handlePublishCourse}
                 isLoading={isSubmitting}
-                leftIcon={<Sparkles size={14} />}
+                leftIcon={<Check size={14} />}
               >
                 Publish Course
               </Button>
@@ -473,7 +141,7 @@ export const CreateCourseScreen: React.FC = () => {
         </div>
 
         {/* Wizard Steps Tabs */}
-        <div className="grid grid-cols-3 gap-2 p-1.5 bg-neutral-100/80 rounded-2xl border border-neutral-200/60">
+        <div className="grid grid-cols-3 gap-2 p-1.5 bg-neutral-100/80 rounded-xl border border-neutral-200/60">
           <button
             onClick={() => setCurrentStep(1)}
             className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -725,9 +393,14 @@ export const CreateCourseScreen: React.FC = () => {
                           >
                             {l.title.trim() || `Lesson #${index + 1} (Untitled)`}
                           </p>
-                          <p className="text-[10px] text-neutral-400 truncate">
-                            {l.description.trim() || 'No description yet'}
-                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-neutral-400 truncate max-w-[130px]">
+                              {l.description.trim() || 'No description yet'}
+                            </span>
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-orange-100/80 text-[#EA580C] shrink-0">
+                              {(l.questions || []).length} {(l.questions || []).length === 1 ? 'Quiz' : 'Quizzes'}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
@@ -816,7 +489,7 @@ export const CreateCourseScreen: React.FC = () => {
                   </div>
 
                   {/* Code Example & Code Language */}
-                  <div className="p-3 bg-neutral-900 rounded-2xl space-y-2 border border-neutral-800">
+                  <div className="p-3 bg-neutral-900 rounded-xl space-y-2 border border-neutral-800">
                     <div className="flex items-center justify-between pb-2 border-b border-neutral-800">
                       <span className="text-xs font-bold text-neutral-200 flex items-center gap-1.5">
                         <Code2 size={14} className="text-[#F97316]" />
@@ -890,55 +563,72 @@ export const CreateCourseScreen: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Interactive Comprehension Questions (Supports multiple questions) */}
+                  {/* Interactive Lesson Quizzes (Supports multiple quizzes per lesson) */}
                   <div className="pt-4 border-t border-neutral-100 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <HelpCircle size={16} className="text-[#EA580C]" />
-                        <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
-                          Comprehension Questions ({(activeLesson.questions || []).length})
-                        </h4>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <HelpCircle size={16} className="text-[#EA580C]" />
+                          <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
+                            Lesson Quizzes & Practice Checks ({(activeLesson.questions || []).length})
+                          </h4>
+                        </div>
+                        <p className="text-[11px] text-neutral-500 mt-0.5">
+                          Tutors can create multiple quizzes for this lesson to thoroughly evaluate student understanding.
+                        </p>
                       </div>
 
                       <button
                         type="button"
                         onClick={handleAddQuestion}
-                        className="text-xs font-bold text-[#EA580C] hover:underline flex items-center gap-1 cursor-pointer"
+                        className="self-start sm:self-auto px-2.5 py-1 text-xs font-bold text-[#EA580C] bg-orange-50 hover:bg-orange-100 rounded-lg border border-orange-200 flex items-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <Plus size={13} />
-                        <span>Add Question to Lesson</span>
+                        <span>Add Another Quiz</span>
                       </button>
                     </div>
 
-                    <div className="space-y-5">
+                    <div className="space-y-4">
                       {(activeLesson.questions || []).map((q, qIdx) => (
                         <div
                           key={qIdx}
-                          className="bg-neutral-50/70 border border-neutral-200 rounded-2xl p-4 sm:p-5 space-y-3.5 relative"
+                          className="bg-neutral-50/70 border border-neutral-200 rounded-xl p-4 sm:p-5 space-y-3.5 relative"
                         >
                           <div className="flex items-center justify-between pb-2 border-b border-neutral-200/80">
-                            <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-[#EA580C] text-white text-[10px] font-bold flex items-center justify-center">
-                                {qIdx + 1}
+                            <span className="text-xs font-bold text-neutral-800 flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-full bg-[#EA580C] text-white text-[10px] font-bold">
+                                Quiz #{qIdx + 1}
                               </span>
-                              <span>Question #{qIdx + 1}</span>
+                              <span className="text-neutral-500 text-[11px]">Assessment Question</span>
                             </span>
 
-                            {(activeLesson.questions || []).length > 1 && (
+                            <div className="flex items-center gap-2">
                               <button
                                 type="button"
-                                onClick={() => handleRemoveQuestion(qIdx)}
-                                className="text-neutral-400 hover:text-rose-600 p-1 flex items-center gap-1 text-xs font-semibold"
-                                title="Remove Question"
+                                onClick={() => handleDuplicateQuestion(qIdx)}
+                                className="text-neutral-500 hover:text-neutral-800 p-1 flex items-center gap-1 text-[11px] font-semibold cursor-pointer"
+                                title="Duplicate Quiz"
                               >
-                                <Trash2 size={13} />
-                                <span>Remove</span>
+                                <Copy size={12} />
+                                <span className="hidden sm:inline">Duplicate</span>
                               </button>
-                            )}
+
+                              {(activeLesson.questions || []).length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveQuestion(qIdx)}
+                                  className="text-neutral-400 hover:text-rose-600 p-1 flex items-center gap-1 text-[11px] font-semibold cursor-pointer"
+                                  title="Remove Quiz"
+                                >
+                                  <Trash2 size={12} />
+                                  <span className="hidden sm:inline">Remove</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           <Input
-                            label="Question Text *"
+                            label="Quiz Question *"
                             placeholder="e.g. What is the difference between synchronous and asynchronous code?"
                             value={q.question_text}
                             onChange={(e) => handleQuestionFieldChange(qIdx, { question_text: e.target.value })}
@@ -1057,8 +747,8 @@ export const CreateCourseScreen: React.FC = () => {
               </div>
 
               {/* Course Overview Card Preview */}
-              <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200/80 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                <div className="w-24 h-24 rounded-xl overflow-hidden bg-neutral-200 shrink-0">
+              <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/80 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="w-24 h-24 rounded-lg overflow-hidden bg-neutral-200 shrink-0">
                   <img src={image} alt={title} className="w-full h-full object-cover" />
                 </div>
                 <div className="space-y-1.5 min-w-0 flex-1">
@@ -1098,8 +788,8 @@ export const CreateCourseScreen: React.FC = () => {
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-neutral-900">{lesson.title}</p>
                           <p className="text-[11px] text-neutral-500 line-clamp-1">{lesson.description}</p>
-                          <span className="text-[10px] text-emerald-700 font-medium inline-flex items-center gap-1 mt-1">
-                            <Check size={11} /> {lesson.questions.length} Comprehension Question{lesson.questions.length > 1 ? 's' : ''} Configured
+                          <span className="text-[10px] text-emerald-700 font-semibold inline-flex items-center gap-1 mt-1">
+                            <Check size={11} /> {lesson.questions.length} {lesson.questions.length === 1 ? 'Quiz' : 'Quizzes'} Configured
                           </span>
                         </div>
                       </div>
@@ -1131,7 +821,7 @@ export const CreateCourseScreen: React.FC = () => {
                   size="md"
                   onClick={handlePublishCourse}
                   isLoading={isSubmitting}
-                  leftIcon={<Sparkles size={16} />}
+                  leftIcon={<Check size={16} />}
                 >
                   Publish Course Now
                 </Button>
