@@ -70,14 +70,22 @@ export function useLoginViewModel() {
       });
 
       if (response.success) {
-        // As defined in Project A Architecture:
-        // Email + Password -> Login -> OTP Screen -> Dashboard
-        navigate('/verify-otp', {
-          state: {
-            email: form.email.trim().toLowerCase(),
-            purpose: 'login'
-          }
-        });
+        if (response.requiresOtp) {
+          // Cognito Challenge Active: Email + Password -> OTP Challenge -> Verify OTP -> Dashboard
+          navigate('/verify-otp', {
+            state: {
+              email: form.email.trim().toLowerCase(),
+              purpose: 'login'
+            }
+          });
+        } else {
+          // Direct login (when MFA is not enabled): Direct to Dashboard
+          navigate('/dashboard', {
+            state: {
+              role: response.user?.role || 'student'
+            }
+          });
+        }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Invalid credentials. Please try again.';

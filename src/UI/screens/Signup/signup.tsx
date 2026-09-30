@@ -20,7 +20,7 @@ export const SignupScreen: React.FC = () => {
       title="Create your account"
       subtitle="Join the next-generation learning community as a Student or certified Tutor."
       badgeText={vm.form.role === 'student' ? 'Student Enrollment' : 'Tutor Onboarding'}
-      cardMaxWidth="md"
+      cardMaxWidth="compact"
       footerContent={
         <p className="text-neutral-500">
           Already have an account?{' '}
@@ -39,17 +39,18 @@ export const SignupScreen: React.FC = () => {
       {/* General Error Banner */}
       {vm.generalError && <Alert type="error" message={vm.generalError} />}
 
-      <form onSubmit={vm.handleSignup} className="flex flex-col gap-4" noValidate>
+      <form onSubmit={vm.handleSignup} className="flex flex-col gap-3 sm:gap-3.5" noValidate>
         {/* Full Name */}
         <Input
           id="signup-name"
           label="Full Name"
+          inputSize="sm"
           required
           placeholder="e.g. Alex Morgan"
           value={vm.form.name}
           onChange={(e) => vm.updateField('name', e.target.value)}
           error={vm.fieldErrors.name}
-          leftIcon={<User size={18} />}
+          leftIcon={<User size={16} />}
           disabled={vm.isLoading}
         />
 
@@ -58,12 +59,13 @@ export const SignupScreen: React.FC = () => {
           id="signup-email"
           type="email"
           label="Email Address"
+          inputSize="sm"
           required
           placeholder="alex.morgan@example.com"
           value={vm.form.email}
           onChange={(e) => vm.updateField('email', e.target.value)}
           error={vm.fieldErrors.email}
-          leftIcon={<Mail size={18} />}
+          leftIcon={<Mail size={16} />}
           disabled={vm.isLoading}
         />
 
@@ -71,7 +73,7 @@ export const SignupScreen: React.FC = () => {
         <div className="flex flex-col">
           <label
             htmlFor="signup-phone"
-            className="block text-xs font-semibold text-neutral-800 mb-1.5 tracking-tight"
+            className="block text-[11px] sm:text-xs font-semibold text-neutral-800 mb-1 tracking-tight"
           >
             Phone Number <span className="text-[#F97316] font-bold">*</span>
           </label>
@@ -79,6 +81,7 @@ export const SignupScreen: React.FC = () => {
             <CountryCodeSelect
               value={vm.form.countryCode}
               onChange={(val) => vm.updateField('countryCode', val)}
+              size="sm"
               disabled={vm.isLoading}
             />
             <div className="flex-1 relative">
@@ -89,14 +92,14 @@ export const SignupScreen: React.FC = () => {
                 value={vm.form.phoneNumber}
                 onChange={(e) => vm.updateField('phoneNumber', e.target.value)}
                 disabled={vm.isLoading}
-                className={`w-full h-11 pl-3.5 pr-10 py-2.5 text-sm text-neutral-900 bg-white border rounded-r-lg outline-none transition-all ${
+                className={`w-full h-10 pl-3 pr-8 py-2 text-xs sm:text-sm text-neutral-900 bg-white border rounded-r-lg outline-none transition-all ${
                   vm.fieldErrors.phoneNumber
                     ? 'border-red-500 focus:ring-2 focus:ring-red-500/20'
                     : 'border-neutral-200 hover:border-neutral-300 focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/20'
                 } disabled:bg-neutral-50 disabled:cursor-not-allowed`}
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
-                <Phone size={16} />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
+                <Phone size={15} />
               </span>
             </div>
           </div>
@@ -109,17 +112,18 @@ export const SignupScreen: React.FC = () => {
 
         {/* Tutor Certification ID - Only visible when Tutor tab is selected */}
         {vm.form.role === 'tutor' && (
-          <div className="p-3.5 bg-orange-50/50 rounded-xl border border-orange-200/70">
+          <div className="p-3 bg-orange-50/50 rounded-xl border border-orange-200/70">
             <Input
               id="signup-certification"
               label="Certification ID"
+              inputSize="sm"
               required
               placeholder="e.g. CERT-EDU-9942"
               value={vm.form.certificationId}
               onChange={(e) => vm.updateField('certificationId', e.target.value)}
               error={vm.fieldErrors.certificationId}
               hint="Required for accredited instructor verification on Project A"
-              leftIcon={<FileBadge size={18} />}
+              leftIcon={<FileBadge size={16} />}
               disabled={vm.isLoading}
             />
           </div>
@@ -129,12 +133,13 @@ export const SignupScreen: React.FC = () => {
         <PasswordInput
           id="signup-password"
           label="Password"
+          inputSize="sm"
           required
           placeholder="Create a strong password"
           value={vm.form.password}
           onChange={(e) => vm.updateField('password', e.target.value)}
           error={vm.fieldErrors.password}
-          leftIcon={<Lock size={18} />}
+          leftIcon={<Lock size={16} />}
           disabled={vm.isLoading}
         />
 
@@ -142,12 +147,13 @@ export const SignupScreen: React.FC = () => {
         <PasswordInput
           id="signup-confirm-password"
           label="Confirm Password"
+          inputSize="sm"
           required
           placeholder="Re-enter your password"
           value={vm.form.confirmPassword}
           onChange={(e) => vm.updateField('confirmPassword', e.target.value)}
           error={vm.fieldErrors.confirmPassword}
-          leftIcon={<Lock size={18} />}
+          leftIcon={<Lock size={16} />}
           disabled={vm.isLoading}
         />
 
@@ -159,7 +165,7 @@ export const SignupScreen: React.FC = () => {
         />
 
         {/* Terms & Conditions Checkbox */}
-        <div className="pt-1">
+        <div className="pt-0.5">
           <Checkbox
             id="signup-terms"
             checked={vm.form.termsAccepted}
@@ -167,7 +173,7 @@ export const SignupScreen: React.FC = () => {
             disabled={vm.isLoading}
             error={vm.fieldErrors.termsAccepted}
             label={
-              <span>
+              <span className="text-xs">
                 I agree to the{' '}
                 <a
                   href="#terms"
@@ -194,10 +200,10 @@ export const SignupScreen: React.FC = () => {
         <Button
           type="submit"
           variant="primary"
-          size="lg"
+          size="md"
           fullWidth
           isLoading={vm.isLoading}
-          className="mt-2"
+          className="mt-1 h-10 text-sm font-semibold"
         >
           Sign Up
         </Button>

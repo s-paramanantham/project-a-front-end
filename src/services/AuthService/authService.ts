@@ -53,6 +53,8 @@ export const getCurrentUser = (): User | null => authService.getCurrentUser();
 export const getTokens = (): AuthTokens | null => authService.getTokens();
 export const isAuthenticated = (): boolean => authService.isAuthenticated();
 export const logout = (): Promise<void> => authService.logout();
+export const updateUserProfile = (updates: Partial<User>): User => authService.updateUserProfile(updates);
+export const updateUserProfileAPI = (updates: Partial<User>): Promise<User> => authService.updateUserProfileAPI(updates);
 
 export type { IAuthService } from './authInterface';
 export { MockAuthService } from './mockAuthService';

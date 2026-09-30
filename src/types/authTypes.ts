@@ -2,6 +2,28 @@ export type UserRole = 'student' | 'tutor';
 
 export type OtpPurpose = 'signup' | 'login' | 'forgot_password';
 
+export interface EducationDetails {
+  degree?: string;
+  institution?: string;
+  fieldOfStudy?: string;
+  graduationYear?: string;
+}
+
+export interface WorkDetails {
+  jobTitle?: string;
+  company?: string;
+  industry?: string;
+  yearsOfExperience?: string;
+}
+
+export interface AddressDetails {
+  street?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -12,6 +34,11 @@ export interface User {
   certificationId?: string;
   emailVerified: boolean;
   createdAt: string;
+  avatarUrl?: string;
+  coverUrl?: string;
+  education?: EducationDetails;
+  work?: WorkDetails;
+  address?: AddressDetails;
 }
 
 export interface AuthTokens {

@@ -14,12 +14,13 @@ export interface ApiConfiguration {
     forgotPassword: string;
     resetPassword: string;
     me: string;
+    profile: string;
     logout: string;
   };
 }
 
 export const apiConfig: ApiConfiguration = {
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
+  baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
   timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 15000,
   endpoints: {
     login: '/users/login',
@@ -29,6 +30,7 @@ export const apiConfig: ApiConfiguration = {
     forgotPassword: '/users/forgot-password',
     resetPassword: '/users/reset-password',
     me: '/users/me',
+    profile: '/users/profile',
     logout: '/users/logout'
   }
 };

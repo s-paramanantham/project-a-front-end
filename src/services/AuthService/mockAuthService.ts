@@ -160,6 +160,11 @@ export class MockAuthService implements IAuthService {
       throw new Error('An account with this email address already exists. Please login instead.');
     }
 
+    const authorizedCredentials = ['Spananth12@2203', 'CERT-EDU-9901', 'CERT-EDU-88219'];
+    if (payload.role === 'tutor' && (!payload.certificationId || !authorizedCredentials.includes(payload.certificationId))) {
+      throw new Error('Invalid tutor credential ID. Please enter an authorized tutor credential ID.');
+    }
+
     const newUser: User = {
       id: `usr_${Date.now()}`,
       name: payload.name.trim(),
@@ -345,5 +350,30 @@ export class MockAuthService implements IAuthService {
     } catch {
       // Ignore
     }
+  }
+
+  public updateUserProfile(updates: Partial<User>): User {
+    if (!this.currentUser) {
+      throw new Error('No user is currently signed in');
+    }
+    this.currentUser = {
+      ...this.currentUser,
+      ...updates,
+      education: { ...this.currentUser.education, ...updates.education },
+      work: { ...this.currentUser.work, ...updates.work },
+      address: { ...this.currentUser.address, ...updates.address }
+    };
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(this.currentUser));
+      }
+    } catch {
+      // Ignore
+    }
+    return this.currentUser;
+  }
+
+  public async updateUserProfileAPI(updates: Partial<User>): Promise<User> {
+    return this.updateUserProfile(updates);
   }
 }

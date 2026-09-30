@@ -89,6 +89,28 @@ export class CognitoAuthService implements IAuthService {
         ? payload.phoneNumber
         : `${payload.countryCode || '+1'}${payload.phoneNumber}`;
 
+      // If registering as TUTOR, strictly validate credential ID from DB BEFORE calling Cognito
+      if (payload.role && payload.role.toUpperCase() === 'TUTOR') {
+        const certId = payload.certificationId?.trim();
+        if (!certId) {
+          throw new Error('Certification / Credential ID is required for Tutor account creation.');
+        }
+        try {
+          const checkRes = await apiClient.post<any>('/users/validate-tutor-credential', {
+            credentialId: certId
+          });
+          if (checkRes.data?.valid === false) {
+            throw new Error(checkRes.message || 'Invalid tutor credential ID. Please enter an authorized credential ID.');
+          }
+        } catch (validationErr: any) {
+          throw new Error(
+            validationErr?.response?.data?.message ||
+            validationErr?.message ||
+            'Invalid tutor credential ID. Please enter an authorized credential ID.'
+          );
+        }
+      }
+
       // 1. Create the user in AWS Cognito directly from Frontend
       await signUpInCognito(payload);
 
@@ -432,6 +454,64 @@ export class CognitoAuthService implements IAuthService {
       }
     }
     this.clearSession();
+  }
+
+  public updateUserProfile(updates: Partial<User>): User {
+    if (!this.currentUser) {
+      throw new Error('No user is currently signed in');
+    }
+    this.currentUser = {
+      ...this.currentUser,
+      ...updates,
+      education: { ...this.currentUser.education, ...updates.education },
+      work: { ...this.currentUser.work, ...updates.work },
+      address: { ...this.currentUser.address, ...updates.address }
+    };
+    try {
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(this.currentUser));
+    } catch {
+      // Storage unavailable
+    }
+    return this.currentUser;
+  }
+
+  public async updateUserProfileAPI(updates: Partial<User>): Promise<User> {
+    const updated = this.updateUserProfile(updates);
+    try {
+      const response = await apiClient.put<any>(apiConfig.endpoints.profile, {
+        userId: updated.id,
+        email: updated.email,
+        name: updated.name,
+        phone: updated.phoneNumber,
+        avatarUrl: updated.avatarUrl,
+        coverUrl: updated.coverUrl,
+        education: updated.education,
+        work: updated.work,
+        address: updated.address
+      });
+
+      if (response?.data) {
+        const dbUser = response.data;
+        const syncedUser: User = {
+          ...updated,
+          name: dbUser.name || updated.name,
+          phoneNumber: dbUser.phone !== undefined ? dbUser.phone : updated.phoneNumber,
+          avatarUrl: dbUser.avatar_url !== undefined ? dbUser.avatar_url : updated.avatarUrl,
+          coverUrl: dbUser.cover_url !== undefined ? dbUser.cover_url : updated.coverUrl,
+          education: dbUser.education || updated.education,
+          work: dbUser.work || updated.work,
+          address: dbUser.address || updated.address
+        };
+        this.currentUser = syncedUser;
+        try {
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(syncedUser));
+        } catch {}
+        return syncedUser;
+      }
+    } catch (err) {
+      console.warn('Could not sync profile to backend:', err);
+    }
+    return updated;
   }
 }
 

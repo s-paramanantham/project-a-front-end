@@ -15,10 +15,18 @@ export const AuthTabs: React.FC<AuthTabsProps> = ({
 }) => {
   return (
     <div
-      className={`grid grid-cols-2 p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/80 mb-6 ${className}`}
+      className={`relative grid grid-cols-2 p-1 bg-neutral-100/90 rounded-xl border border-neutral-200/70 mb-4 select-none ${className}`}
       role="tablist"
       aria-label="Account Type"
     >
+      {/* Smooth Sliding Pill Indicator */}
+      <div
+        aria-hidden="true"
+        className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-white shadow-sm border border-neutral-200/70 transition-transform duration-200 ease-out pointer-events-none ${
+          activeTab === 'student' ? 'left-1 translate-x-0' : 'left-1 translate-x-full'
+        }`}
+      />
+
       <button
         type="button"
         role="tab"
@@ -26,14 +34,18 @@ export const AuthTabs: React.FC<AuthTabsProps> = ({
         aria-selected={activeTab === 'student'}
         aria-controls="panel-student"
         onClick={() => onTabChange('student')}
-        className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-150 ${activeTab === 'student'
-            ? 'bg-white text-neutral-900 shadow-sm border border-neutral-200/60'
-            : 'text-neutral-500 hover:text-neutral-900 hover:bg-white/50'
-          }`}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+        className={`relative z-10 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 active:outline-none select-none cursor-pointer ${
+          activeTab === 'student'
+            ? 'text-neutral-900 font-bold'
+            : 'text-neutral-500 hover:text-neutral-800'
+        }`}
       >
         <GraduationCap
           size={16}
-          className={activeTab === 'student' ? 'text-[#F97316]' : 'text-neutral-400'}
+          className={`transition-colors duration-200 ${
+            activeTab === 'student' ? 'text-[#F97316]' : 'text-neutral-400'
+          }`}
         />
         <span>Student</span>
       </button>
@@ -45,14 +57,18 @@ export const AuthTabs: React.FC<AuthTabsProps> = ({
         aria-selected={activeTab === 'tutor'}
         aria-controls="panel-tutor"
         onClick={() => onTabChange('tutor')}
-        className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-150 ${activeTab === 'tutor'
-            ? 'bg-white text-neutral-900 shadow-sm border border-neutral-200/60'
-            : 'text-neutral-500 hover:text-neutral-900 hover:bg-white/50'
-          }`}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+        className={`relative z-10 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-200 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 active:outline-none select-none cursor-pointer ${
+          activeTab === 'tutor'
+            ? 'text-neutral-900 font-bold'
+            : 'text-neutral-500 hover:text-neutral-800'
+        }`}
       >
         <Award
           size={16}
-          className={activeTab === 'tutor' ? 'text-[#F97316]' : 'text-neutral-400'}
+          className={`transition-colors duration-200 ${
+            activeTab === 'tutor' ? 'text-[#F97316]' : 'text-neutral-400'
+          }`}
         />
         <span>Tutor</span>
       </button>

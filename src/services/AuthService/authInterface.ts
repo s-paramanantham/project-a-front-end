@@ -21,4 +21,6 @@ export interface IAuthService {
   getTokens(): AuthTokens | null;
   logout(): Promise<void>;
   isAuthenticated(): boolean;
+  updateUserProfile(updates: Partial<User>): User;
+  updateUserProfileAPI(updates: Partial<User>): Promise<User>;
 }
